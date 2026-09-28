@@ -1,0 +1,178 @@
+<!-- -----------------------------------------------------------------------------
+PAHATID SYSTEM — Habal-Habal Transport Services Platform
+FILE: admin/login.html + dashboard.html
+TYPE: Admin Portal — Authentication & Management
+VERSION: 1.0.0
+LAST UPDATED: 2026-09-28
+STATUS: Active — Ready for Implementation
+DEPLOYMENT: GitHub Pages Compatible — Pure HTML/CSS/JS
+SECURITY: Client-side auth simulation | Replace with real backend in production
+FEATURES: Admin Login • Stats Overview • Driver Management • System Logs
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Mag-Login | PAHATID SYSTEM</title>
+  <meta name="description" content="Pamamahala sa PAHATID SYSTEM — mga drayber, talaan, at kabuuan ng sistema.">
+  <meta name="theme-color" content="#1f2937">
+
+  <link rel="icon" href="../assets/icons/favicon.ico">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="auth-page admin-auth">
+
+<!-- ==============================================
+TOP NAVIGATION
+============================================== -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-brand">
+      <span class="brand-icon">🛵</span>
+      <span class="brand-text">PAHATID</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="../index.html">Tahanan</a></li>
+      <li><a href="../commuter/book.html">Pasahero</a></li>
+      <li><a href="../driver/login.html">Drayber</a></li>
+      <li><a href="login.html" class="active">Admin</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ==============================================
+LOGIN CARD
+============================================== -->
+<main class="auth-container">
+  <div class="auth-card admin-card">
+    <div class="auth-header">
+      <span class="auth-icon">🔐</span>
+      <h1>Administrator — Pagpasok</h1>
+      <p>Para sa mga may pahintulot lamang</p>
+    </div>
+
+    <form id="adminLoginForm" class="auth-form">
+      <div class="form-group">
+        <label for="adminId">Admin ID</label>
+        <input 
+          type="text" 
+          id="adminId" 
+          name="adminId" 
+          required
+          autocomplete="username"
+          placeholder="Hal. ADM-001"
+        >
+        <span class="form-error" id="adminIdError"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword">
+          Password
+          <button type="button" id="togglePw" class="password-toggle" aria-label="Ipakita">👁️</button>
+        </label>
+        <input 
+          type="password" 
+          id="adminPassword" 
+          name="adminPassword" 
+          required
+          autocomplete="current-password"
+          placeholder="Iyong password"
+        >
+        <span class="form-error" id="adminPwError"></span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        ✅ Magpasok sa Sistema
+      </button>
+    </form>
+
+    <div id="loginStatus" class="form-status" role="alert"></div>
+
+    <p class="auth-links">
+      <a href="../index.html">← Bumalik sa Tahanan</a>
+    </p>
+  </div>
+</main>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="../assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Redirect if already logged in
+  if (PahatidAuth.getRole() === 'admin') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const form = document.getElementById('adminLoginForm');
+  const pwInput = document.getElementById('adminPassword');
+  const togglePw = document.getElementById('togglePw');
+  const statusEl = document.getElementById('loginStatus');
+
+  // Show/Hide Password
+  togglePw.addEventListener('click', () => {
+    const isPw = pwInput.type === 'password';
+    pwInput.type = isPw ? 'text' : 'password';
+    togglePw.textContent = isPw ? '🙈' : '👁️';
+  });
+
+  // Form Submit
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Clear errors
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    statusEl.className = 'form-status';
+    statusEl.textContent = '';
+
+    const adminId = document.getElementById('adminId').value.trim();
+    const password = pwInput.value;
+
+    // Validation
+    let valid = true;
+    if (!PahatidValid.text(adminId, 50)) {
+      document.getElementById('adminIdError').textContent = 'Ilagay ang tamang Admin ID';
+      valid = false;
+    }
+    if (!password || password.length < 6) {
+      document.getElementById('adminPwError').textContent = 'Hindi bababa sa 6 na titik';
+      valid = false;
+    }
+    if (!valid) return;
+
+    // Simulate Login — Replace with real backend validation
+    statusEl.className = 'form-status form-loading';
+    statusEl.textContent = 'Sinusuri ang pahintulot...';
+
+    setTimeout(() => {
+      // Save admin session
+      PahatidStore.set('user_role', 'admin');
+      PahatidStore.set('user_id', adminId);
+      
+      statusEl.className = 'form-status form-success';
+      statusEl.textContent = '✅ Matagumpay! Inililipat sa Dashboard...';
+      
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 800);
+    }, 1200);
+  });
+});
+</script>
+
+<style>
+.admin-auth {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+.admin-card {
+  background: white;
+}
+</style>
+</body>
+</html>
