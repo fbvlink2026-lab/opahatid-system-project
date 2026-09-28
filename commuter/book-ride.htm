@@ -1,0 +1,449 @@
+<!-- =========================================
+Project: Pahatid System Project
+File: commuter/book-ride.html
+Description: Commuter Booking Interface with Map Selection & Fare Estimation
+Author: AI Assistant
+Date: 2026-09-29
+Version: 2.0.0 (Path A - Serverless)
+========================================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Ride | Pahatid System</title>
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+    
+    <style>
+        .booking-panel {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1000; /* Above map */
+        }
+        #map-container {
+            height: 50vh;
+            min-height: 400px;
+            border-radius: 1rem;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        .fare-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--pahatid-primary);
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 2;
+            color: #adb5bd;
+        }
+        .step.active {
+            border-color: var(--pahatid-primary);
+            background: var(--pahatid-primary);
+            color: white;
+        }
+        .step.completed {
+            border-color: var(--pahatid-success);
+            background: var(--pahatid-success);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navbar (Simplified for Commuter Flow) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="/index.html">
+                <i class="fas fa-motorcycle me-2"></i>Pahatid<span class="text-warning">System</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm"><i class="fas fa-home me-1"></i> Home</a>
+                <button id="logoutBtn" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i> Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        
+        <!-- Step Indicator -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8">
+                <div class="step-indicator">
+                    <div class="step active" id="step1">1</div>
+                    <div class="step" id="step2">2</div>
+                    <div class="step" id="step3">3</div>
+                </div>
+                <p class="text-center text-muted small mt-2" id="stepLabel">Step 1: Select Pickup Location</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Left Column: Map Interaction -->
+            <div class="col-lg-7">
+                <div class="card card-custom shadow-sm h-100">
+                    <div class="card-body p-0">
+                        <div id="map-container"></div>
+                        <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Tap on the map to set location.</small>
+                            <button id="resetMapBtn" class="btn btn-sm btn-outline-secondary">Reset View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Booking Form -->
+            <div class="col-lg-5">
+                <div class="booking-panel sticky-top" style="top: 20px;">
+                    
+                    <!-- Phase 1: Input Locations -->
+                    <form id="bookingForm">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt me-2"></i>Pickup Point</label>
+                            <input type="text" class="form-control" id="pickupAddress" placeholder="Enter address or tap map..." readonly>
+                            <input type="hidden" id="pickupLat">
+                            <input type="hidden" id="pickupLng">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-danger"><i class="fas fa-flag-checkered me-2"></i>Drop-off Point</label>
+                            <input type="text" class="form-control" id="dropoffAddress" placeholder="Where are you going?" required>
+                            <input type="hidden" id="dropoffLat">
+                            <input type="hidden" id="dropoffLng">
+                        </div>
+
+                        <hr>
+
+                        <!-- Fare Estimate Display -->
+                        <div class="alert alert-light border rounded-3 p-3 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Distance:</span>
+                                <strong id="distanceDisplay">-- km</strong>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Estimated Fare:</span>
+                                <span class="fare-display" id="fareDisplay">₱0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Payment Method</label>
+                            <select class="form-select" id="paymentMethod">
+                                <option value="cash">Cash (Pay Driver)</option>
+                                <option value="gcash">GCash</option>
+                                <option value="paymaya">Maya</option>
+                                <option value="wallet">Pahatid Wallet</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow-sm" id="bookBtn" disabled>
+                            <i class="fas fa-paper-plane me-2"></i> Confirm Booking
+                        </button>
+                        
+                        <p class="text-center small text-muted mt-3 mb-0">
+                            By booking, you agree to our Terms of Service.
+                        </p>
+                    </form>
+
+                    <!-- Phase 2: Success/Tracking State (Hidden Initially) -->
+                    <div id="trackingState" class="hidden text-center py-4">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <h5 class="fw-bold">Finding your driver...</h5>
+                        <p class="text-muted small">Reference Code: <span id="refCodeDisplay" class="fw-bold text-dark"></span></p>
+                        <div class="progress mb-4" style="height: 6px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" width="100%"></div>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">Cancel Search</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script type="module">
+        import { supabase, calculateEstimatedFare, generateRefCode, formatCurrency } from '../assets/js/config.js';
+
+        // --- STATE MANAGEMENT ---
+        let currentUser = null;
+        let mapInstance = null;
+        let pickupMarker = null;
+        let dropoffMarker = null;
+        let tempPickupLatLng = null;
+        let tempDropoffLatLng = null;
+        let estimatedDistanceKm = 0;
+
+        // DOM Elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const stepLabel = document.getElementById('stepLabel');
+        const bookBtn = document.getElementById('bookBtn');
+        const bookingForm = document.getElementById('bookingForm');
+        const trackingState = document.getElementById('trackingState');
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            initMap();
+            setupEventListeners();
+        });
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Verify Role
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+            if (profile.role !== 'commuter') {
+                alert("Access Denied. This page is for Commuters only.");
+                window.location.href = '/index.html';
+            }
+            currentUser = session.user;
+        }
+
+        // --- MAP SETUP ---
+        function initMap() {
+            // Default Center (Manila)
+            const defaultCenter = [14.5995, 120.9842];
+            
+            mapInstance = L.map('map-container').setView(defaultCenter, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mapInstance);
+
+            // Handle Map Clicks
+            mapInstance.on('click', (e) => {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                // Logic: If Pickup not set, set Pickup. Else, set Dropoff.
+                if (!tempPickupLatLng) {
+                    setPickup(lat, lng);
+                } else if (!tempDropoffLatLng) {
+                    setDropoff(lat, lng);
+                } else {
+                    // Reset if both are set? Or update Dropoff? 
+                    // Let's update Dropoff for flexibility
+                    setDropoff(lat, lng);
+                }
+            });
+
+            // Try to get user current location for convenience
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    mapInstance.setView([lat, lng], 15);
+                    // Optional: Auto-set pickup to current location
+                    // setPickup(lat, lng); 
+                }, () => {});
+            }
+        }
+
+        function setPickup(lat, lng) {
+            tempPickupLatLng = { lat, lng };
+            
+            // Update Marker
+            if (pickupMarker) mapInstance.removeLayer(pickupMarker);
+            pickupMarker = L.marker([lat, lng]).addTo(mapInstance)
+                .bindPopup("<b>Pickup Here</b>")
+                .openPopup();
+
+            // Update Inputs
+            document.getElementById('pickupLat').value = lat;
+            document.getElementById('pickupLng').value = lng;
+            document.getElementById('pickupAddress').value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            
+            // UI Progression
+            step1.classList.add('completed');
+            step2.classList.add('active');
+            stepLabel.textContent = "Step 2: Select Drop-off Location";
+            
+            validateForm();
+        }
+
+        function setDropoff(lat, lng) {
+            tempDropoffLatLng = { lat, lng };
+
+            // Update Marker
+            if (dropoffMarker) mapInstance.removeLayer(dropoffMarker);
+            dropoffMarker = L.marker([lat, lng]).addTo(mapInstance)
+                .bindPopup("<b>Destination</b>")
+                .openPopup();
+
+            // Draw Line between markers
+            if (pickupMarker && dropoffMarker) {
+                // Remove old polyline if exists
+                if(window.routeLine) mapInstance.removeLayer(window.routeLine);
+                
+                window.routeLine = L.polyline([
+                    [tempPickupLatLng.lat, tempPickupLatLng.lng],
+                    [tempDropoffLatLng.lat, tempDropoffLatLng.lng]
+                ], {color: '#0d6efd'}).addTo(mapInstance);
+                
+                // Fit bounds to show whole route
+                mapInstance.fitBounds(window.routeLine.getBounds());
+                
+                // Calculate Distance (Haversine Formula approximation via Leaflet)
+                estimatedDistanceKm = window.routeLine.getLatLngs()[0].distanceTo(window.routeLine.getLatLngs()[1]) / 1000;
+                
+                // Update Fare
+                const fare = calculateEstimatedFare(estimatedDistanceKm);
+                document.getElementById('distanceDisplay').textContent = `${estimatedDistanceKm.toFixed(2)} km`;
+                document.getElementById('fareDisplay').textContent = formatCurrency(fare);
+            }
+
+            // Update Inputs
+            document.getElementById('dropoffLat').value = lat;
+            document.getElementById('dropoffLng').value = lng;
+            // Note: Reverse geocoding requires external API key usually. 
+            // For MVP, we just store coords. Address input can be manual if needed.
+            if(document.getElementById('dropoffAddress').value === "") {
+                 document.getElementById('dropoffAddress').value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            }
+
+            // UI Progression
+            step2.classList.add('completed');
+            step3.classList.add('active');
+            stepLabel.textContent = "Step 3: Review & Book";
+            
+            validateForm();
+        }
+
+        function validateForm() {
+            const hasPickup = !!document.getElementById('pickupLat').value;
+            const hasDropoff = !!document.getElementById('dropoffLat').value;
+            
+            if (hasPickup && hasDropoff && estimatedDistanceKm > 0) {
+                bookBtn.disabled = false;
+                bookBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Confirm Booking';
+            } else {
+                bookBtn.disabled = true;
+                bookBtn.innerHTML = '<i class="fas fa-lock me-2"></i> Complete Steps First';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            // Manual Address Entry Fallback (If user types instead of clicking map)
+            // For this MVP, we strictly enforce map clicks for coordinates accuracy.
+            // But we allow editing the text field visually.
+
+            document.getElementById('resetMapBtn').addEventListener('click', () => {
+                if(confirm("Clear all selections?")) {
+                    location.reload();
+                }
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                if(confirm("Logout?")) {
+                    await supabase.auth.signOut();
+                    window.location.href = '/login.html';
+                }
+            });
+
+            bookingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await submitBooking();
+            });
+        }
+
+        // --- SUBMIT BOOKING LOGIC ---
+        async function submitBooking() {
+            bookBtn.disabled = true;
+            bookBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+
+            const refCode = generateRefCode();
+            
+            // Prepare Data Object matching Supabase Schema
+            const newBooking = {
+                reference_code: refCode,
+                commuter_profile_id: currentUser.id,
+                pickup_address: document.getElementById('pickupAddress').value,
+                pickup_lat: parseFloat(document.getElementById('pickupLat').value),
+                pickup_lng: parseFloat(document.getElementById('pickupLng').value),
+                dropoff_address: document.getElementById('dropoffAddress').value,
+                dropoff_lat: parseFloat(document.getElementById('dropoffLat').value),
+                dropoff_lng: parseFloat(document.getElementById('dropoffLng').value),
+                estimated_distance_km: estimatedDistanceKm,
+                base_fare: 40.00, // From config defaults
+                final_fare: parseFloat(document.getElementById('fareDisplay').textContent.replace(/[^\d.-]/g, '')),
+                payment_method: document.getElementById('paymentMethod').value,
+                trip_status: 'requested'
+            };
+
+            try {
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .insert(newBooking)
+                    .select();
+
+                if (error) throw error;
+
+                // Success! Switch UI to Tracking Mode
+                bookingForm.style.display = 'none';
+                trackingState.classList.remove('hidden');
+                document.getElementById('refCodeDisplay').textContent = refCode;
+
+                // Optional: Redirect to track order after 3 seconds
+                setTimeout(() => {
+                    window.location.href = `track-order.html?id=${data[0].booking_id}&ref=${refCode}`;
+                }, 3000);
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed to create booking: " + err.message);
+                bookBtn.disabled = false;
+                bookBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Retry Booking';
+            }
+        }
+    </script>
+</body>
+</html>
