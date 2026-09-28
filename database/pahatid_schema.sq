@@ -1,1 +1,253 @@
+-- =========================================
+-- Project: Pahatid System Project
+-- File: database/pahatid_schema.sql
+-- Description: Complete SQL Schema for Habal-Habal Transport Management System
+-- Author: AI Assistant
+-- Date: 2026-09-29
+-- Version: 1.0.0
+-- Note: This file creates tables only. No sensitive data included.
+-- =========================================
 
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+08:00"; -- Philippines Standard Time (PHT)
+
+-- Create Database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS `pahatid_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `pahatid_db`;
+
+-- --------------------------------------------------------
+-- Table structure for table `users`
+-- Base authentication table for Admins, Drivers, and Commuters
+-- --------------------------------------------------------
+CREATE TABLE `users` (
+  `user_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `role` ENUM('admin', 'dispatcher', 'driver', 'commuter') NOT NULL,
+  `full_name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(100) UNIQUE NOT NULL,
+  `phone` VARCHAR(20) UNIQUE NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL COMMENT 'Bcrypt hashed password',
+  `secret_key` VARCHAR(64) DEFAULT NULL COMMENT 'Special key for driver/admin secure login',
+  `profile_img_url` VARCHAR(255) DEFAULT NULL,
+  `status` ENUM('active', 'inactive', 'suspended', 'pending_approval') DEFAULT 'pending_approval',
+  `last_login_at` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `branches`
+-- Physical locations/hubs for the transport service
+-- --------------------------------------------------------
+CREATE TABLE `branches` (
+  `branch_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `branch_code` VARCHAR(20) UNIQUE NOT NULL COMMENT 'e.g., MNL-01, CEB-02',
+  `branch_name` VARCHAR(100) NOT NULL,
+  `address` TEXT NOT NULL,
+  `latitude` DECIMAL(10, 8) NOT NULL,
+  `longitude` DECIMAL(11, 8) NOT NULL,
+  `contact_number` VARCHAR(20) DEFAULT NULL,
+  `manager_user_id` INT(11) DEFAULT NULL COMMENT 'FK to users table',
+  `is_active` BOOLEAN DEFAULT TRUE,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`branch_id`),
+  FOREIGN KEY (`manager_user_id`) REFERENCES `users`(`user_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `drivers`
+-- Extended profile for drivers including rank and vehicle info
+-- --------------------------------------------------------
+CREATE TABLE `drivers` (
+  `driver_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `user_id` INT(11) UNIQUE NOT NULL,
+  `branch_id` INT(11) DEFAULT NULL,
+  `license_number` VARCHAR(50) UNIQUE NOT NULL,
+  `license_expiry_date` DATE DEFAULT NULL,
+  `vehicle_plate_number` VARCHAR(20) UNIQUE NOT NULL,
+  `current_rank` ENUM('newbie', 'regular', 'senior', 'expert', 'master') DEFAULT 'newbie',
+  `performance_points` INT(11) DEFAULT 0 COMMENT 'Points for promotion/demotion logic',
+  `average_rating` DECIMAL(3, 2) DEFAULT 5.00,
+  `total_trips_completed` INT(11) DEFAULT 0,
+  `is_online` BOOLEAN DEFAULT FALSE,
+  `current_latitude` DECIMAL(10, 8) DEFAULT NULL,
+  `current_longitude` DECIMAL(11, 8) DEFAULT NULL,
+  `last_location_update` DATETIME DEFAULT NULL,
+  `joined_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`driver_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `commuters`
+-- Extended profile for passengers
+-- --------------------------------------------------------
+CREATE TABLE `commuters` (
+  `commuter_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `user_id` INT(11) UNIQUE NOT NULL,
+  `wallet_balance` DECIMAL(10, 2) DEFAULT 0.00,
+  `preferred_payment_method` ENUM('cash', 'gcash', 'paymaya', 'wallet') DEFAULT 'cash',
+  `default_pickup_lat` DECIMAL(10, 8) DEFAULT NULL,
+  `default_pickup_lng` DECIMAL(11, 8) DEFAULT NULL,
+  `referral_code` VARCHAR(20) DEFAULT NULL,
+  `referred_by_commuter_id` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`commuter_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`referred_by_commuter_id`) REFERENCES `commuters`(`commuter_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `vehicles`
+-- Detailed specs of motorcycles/units used by drivers
+-- --------------------------------------------------------
+CREATE TABLE `vehicles` (
+  `vehicle_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `driver_id` INT(11) NOT NULL,
+  `make` VARCHAR(50) NOT NULL COMMENT 'e.g., Honda, Yamaha',
+  `model` VARCHAR(50) NOT NULL COMMENT 'e.g., Beat, NMAX',
+  `year_manufactured` YEAR DEFAULT NULL,
+  `color` VARCHAR(30) DEFAULT NULL,
+  `engine_cc` INT(11) DEFAULT NULL,
+  `fuel_consumption_rate_km_per_liter` DECIMAL(5, 2) DEFAULT 35.00 COMMENT 'Average efficiency for cost calc',
+  `maintenance_status` ENUM('good', 'needs_service', 'under_repair') DEFAULT 'good',
+  `next_service_due_date` DATE DEFAULT NULL,
+  PRIMARY KEY (`vehicle_id`),
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `bookings`
+-- The core transaction record
+-- --------------------------------------------------------
+CREATE TABLE `bookings` (
+  `booking_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `reference_code` VARCHAR(20) UNIQUE NOT NULL COMMENT 'Public ID e.g., PH-20260929-XXXX',
+  `commuter_id` INT(11) NOT NULL,
+  `driver_id` INT(11) DEFAULT NULL COMMENT 'Null until assigned/dispatched',
+  `pickup_address` TEXT NOT NULL,
+  `pickup_lat` DECIMAL(10, 8) NOT NULL,
+  `pickup_lng` DECIMAL(11, 8) NOT NULL,
+  `dropoff_address` TEXT NOT NULL,
+  `dropoff_lat` DECIMAL(10, 8) NOT NULL,
+  `dropoff_lng` DECIMAL(11, 8) NOT NULL,
+  `estimated_distance_km` DECIMAL(6, 2) DEFAULT 0.00,
+  `actual_distance_km` DECIMAL(6, 2) DEFAULT 0.00,
+  `base_fare` DECIMAL(10, 2) NOT NULL,
+  `surge_pricing_multiplier` DECIMAL(3, 2) DEFAULT 1.00,
+  `final_fare` DECIMAL(10, 2) NOT NULL,
+  `discount_applied` DECIMAL(10, 2) DEFAULT 0.00,
+  `payment_method` ENUM('cash', 'wallet', 'gcash', 'paymaya') DEFAULT 'cash',
+  `payment_status` ENUM('pending', 'paid', 'failed', 'refunded') DEFAULT 'pending',
+  `trip_status` ENUM('requested', 'accepted', 'arrived_pickup', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'requested',
+  `scheduled_time` DATETIME DEFAULT NULL,
+  `started_at` DATETIME DEFAULT NULL,
+  `ended_at` DATETIME DEFAULT NULL,
+  `cancellation_reason` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`booking_id`),
+  FOREIGN KEY (`commuter_id`) REFERENCES `commuters`(`commuter_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `driver_expenses`
+-- Tracks costs for Rate Calculator & Net Income logic
+-- --------------------------------------------------------
+CREATE TABLE `driver_expenses` (
+  `expense_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `driver_id` INT(11) NOT NULL,
+  `booking_id` INT(11) DEFAULT NULL COMMENT 'Optional link to specific trip',
+  `category` ENUM('fuel_gasoline', 'oil_change', 'tire_replacement', 'parts_maintenance', 'daily_rental_fee', 'food_meals', 'parking_toll', 'other') NOT NULL,
+  `amount` DECIMAL(10, 2) NOT NULL,
+  `quantity` DECIMAL(10, 2) DEFAULT 1.00 COMMENT 'E.g., Liters of gas',
+  `unit_cost` DECIMAL(10, 2) DEFAULT 0.00,
+  `description` TEXT,
+  `receipt_image_url` VARCHAR(255) DEFAULT NULL,
+  `recorded_date` DATE NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`expense_id`),
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`booking_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `complaints_and_warnings`
+-- Reklamo system for performance monitoring
+-- --------------------------------------------------------
+CREATE TABLE `complaints_and_warnings` (
+  `issue_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `driver_id` INT(11) NOT NULL,
+  `reporter_user_id` INT(11) NOT NULL COMMENT 'Can be commuter or admin',
+  `booking_id` INT(11) DEFAULT NULL,
+  `type` ENUM('reklamo', 'official_warning', 'commendation') NOT NULL,
+  `severity_level` ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
+  `subject` VARCHAR(150) NOT NULL,
+  `details` TEXT NOT NULL,
+  `admin_notes` TEXT DEFAULT NULL,
+  `resolution_status` ENUM('open', 'investigating', 'resolved', 'dismissed') DEFAULT 'open',
+  `points_deducted_or_added` INT(11) DEFAULT 0 COMMENT 'Negative for penalty, positive for reward',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `resolved_at` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`issue_id`),
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`reporter_user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`booking_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `reviews_feedback`
+-- Public facing ratings displayed at bottom of pages
+-- --------------------------------------------------------
+CREATE TABLE `reviews_feedback` (
+  `review_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `booking_id` INT(11) UNIQUE NOT NULL,
+  `commuter_id` INT(11) NOT NULL,
+  `driver_id` INT(11) NOT NULL,
+  `rating_stars` TINYINT(1) CHECK (`rating_stars` BETWEEN 1 AND 5),
+  `comment_text` TEXT,
+  `tags` JSON DEFAULT NULL COMMENT 'Array of tags like ["safe", "fast", "friendly"]',
+  `is_public` BOOLEAN DEFAULT TRUE,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`review_id`),
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`booking_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`commuter_id`) REFERENCES `commuters`(`commuter_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `favorite_drivers`
+-- Convenience feature for commuters
+-- --------------------------------------------------------
+CREATE TABLE `favorite_drivers` (
+  `commuter_id` INT(11) NOT NULL,
+  `driver_id` INT(11) NOT NULL,
+  `added_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`commuter_id`, `driver_id`),
+  FOREIGN KEY (`commuter_id`) REFERENCES `commuters`(`commuter_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`driver_id`) REFERENCES `drivers`(`driver_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `system_settings`
+-- Dynamic configuration for Admin Panel
+-- --------------------------------------------------------
+CREATE TABLE `system_settings` (
+  `setting_key` VARCHAR(50) PRIMARY KEY,
+  `setting_value` TEXT NOT NULL,
+  `data_type` ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
+  `description` VARCHAR(255),
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert Default Settings
+INSERT INTO `system_settings` (`setting_key`, `setting_value`, `data_type`, `description`) VALUES
+('site_language_default', 'en', 'string', 'Default language code'),
+('base_fare_php', '40.00', 'number', 'Minimum fare amount in PHP'),
+('rate_per_km_php', '15.00', 'number', 'Charge per kilometer after base fare'),
+('commission_rate_percent', '20.00', 'number', 'Platform fee percentage taken from driver earnings'),
+('min_driver_rating_to_accept', '4.00', 'number', 'Drivers below this rating may have restrictions'),
+('support_email', 'support@pahatidsystem.com', 'string', 'Contact email for tickets');
+
+COMMIT;
