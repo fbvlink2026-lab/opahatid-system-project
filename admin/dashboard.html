@@ -1,0 +1,322 @@
+<!-- -----------------------------------------------------------------------------
+FILE: admin/dashboard.html
+TYPE: Admin — Main Management Dashboard
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | PAHATID SYSTEM</title>
+  <meta name="theme-color" content="#1f2937">
+  <link rel="icon" href="../assets/icons/favicon.ico">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="dashboard-body admin-body">
+
+<!-- ==============================================
+SIDEBAR
+============================================== -->
+<aside id="sidebar" class="sidebar admin-sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon">⚙️</span>
+      <span class="sidebar-brand-text">ADMIN</span>
+    </div>
+    <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Menu">◀</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="#overview" class="sidebar-link active">
+      <span class="sidebar-link-icon">📊</span>
+      <span class="sidebar-link-text">Pangkalahatan</span>
+    </a>
+    <a href="#drivers" class="sidebar-link">
+      <span class="sidebar-link-icon">🏍️</span>
+      <span class="sidebar-link-text">Mga Drayber</span>
+    </a>
+    <a href="#rides" class="sidebar-link">
+      <span class="sidebar-link-icon">📋</span>
+      <span class="sidebar-link-text">Talaan ng Biyahe</span>
+    </a>
+    <a href="#reports" class="sidebar-link">
+      <span class="sidebar-link-icon">📈</span>
+      <span class="sidebar-link-text">Ulat</span>
+    </a>
+    <a href="#settings" class="sidebar-link">
+      <span class="sidebar-link-icon">🔧</span>
+      <span class="sidebar-link-text">Mga Setting</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <span class="sidebar-link-icon">👤</span>
+      <span class="sidebar-link-text" id="adminName">Admin</span>
+    </div>
+    <a href="#" class="sidebar-link" id="logoutBtn">
+      <span class="sidebar-link-icon">🚪</span>
+      <span class="sidebar-link-text">Mag-Logout</span>
+    </a>
+  </div>
+</aside>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- ==============================================
+MAIN CONTENT
+============================================== -->
+<main id="mainContent" class="main-content">
+  <header class="dashboard-topbar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    <h1 class="dashboard-title">Pamamahala sa Sistema</h1>
+    <div class="topbar-status">
+      <span class="status-indicator status-online">🟢 Sistema Aktibo</span>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="dashboard-section">
+      <h2 class="section-title">📊 Kabuuan ng Sistema</h2>
+      <div class="earnings-grid admin-stats">
+        <div class="earnings-card">
+          <span class="earnings-label">Mga Drayber</span>
+          <span class="earnings-value" id="totalDrivers">12</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Biyahe Ngayong Araw</span>
+          <span class="earnings-value" id="todayRides">47</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Kabuuang Kita</span>
+          <span class="earnings-value" id="systemRevenue">₱24,580.00</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Aktibong Sakay</span>
+          <span class="earnings-value" id="activeRides">3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DRIVERS TABLE -->
+    <section id="drivers" class="dashboard-section">
+      <h2 class="section-title">🏍️ Talaan ng Mga Drayber</h2>
+      <div class="table-actions">
+        <input type="search" id="driverSearch" placeholder="Maghanap ng drayber..." class="search-input">
+        <button class="btn btn-primary btn-sm">➕ Magdagdag</button>
+      </div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pangalan</th>
+              <th>Plaka</th>
+              <th>Katayuan</th>
+              <th>Biyahe</th>
+              <th>Kita</th>
+              <th>Aksyon</th>
+            </tr>
+          </thead>
+          <tbody id="driversBody">
+            <tr>
+              <td>D-001</td>
+              <td>Juan Dela Cruz</td>
+              <td>ABC-1234</td>
+              <td><span class="badge badge-online">Aktibo</span></td>
+              <td>156</td>
+              <td>₱12,450.00</td>
+              <td><button class="btn btn-sm btn-outline">Tingnan</button></td>
+            </tr>
+            <tr>
+              <td>D-002</td>
+              <td>Maria Santos</td>
+              <td>XYZ-5678</td>
+              <td><span class="badge badge-online">Aktibo</span></td>
+              <td>98</td>
+              <td>₱8,920.00</td>
+              <td><button class="btn btn-sm btn-outline">Tingnan</button></td>
+            </tr>
+            <tr>
+              <td>D-003</td>
+              <td>Pedro Reyes</td>
+              <td>DEF-9012</td>
+              <td><span class="badge badge-offline">Hindi Aktibo</span></td>
+              <td>42</td>
+              <td>₱3,400.00</td>
+              <td><button class="btn btn-sm btn-outline">Tingnan</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECENT RIDES -->
+    <section id="rides" class="dashboard-section">
+      <h2 class="section-title">📋 Mga Kamakailang Biyahe</h2>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Oras</th>
+              <th>Drayber</th>
+              <th>Distansya</th>
+              <th>Pamasahe</th>
+              <th>Katayuan</th>
+            </tr>
+          </thead>
+          <tbody id="ridesBody">
+            <tr>
+              <td>23:25</td>
+              <td>Juan Dela Cruz</td>
+              <td>4.2 km</td>
+              <td>₱63.00</td>
+              <td><span class="badge badge-success">Tapos</span></td>
+            </tr>
+            <tr>
+              <td>23:18</td>
+              <td>Maria Santos</td>
+              <td>2.8 km</td>
+              <td>₱42.00</td>
+              <td><span class="badge badge-success">Tapos</span></td>
+            </tr>
+            <tr>
+              <td>23:05</td>
+              <td>Pedro Reyes</td>
+              <td>5.5 km</td>
+              <td>₱82.50</td>
+              <td><span class="badge badge-pending">Nagaganap</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="reports" class="dashboard-section">
+      <h2 class="section-title">📈 Ulat at Buod</h2>
+      <div class="reports-grid">
+        <div class="report-card">
+          <h3>Buwanang Kita</h3>
+          <p class="report-value">₱74,250.00</p>
+          <p class="report-change up">↑ 12.5% kumpara sa nakaraang buwan</p>
+          <button class="btn btn-outline btn-sm">I-download PDF</button>
+        </div>
+        <div class="report-card">
+          <h3>Kabuuang Distansya</h3>
+          <p class="report-value">1,842 km</p>
+          <p class="report-change up">↑ 8.3% kumpara sa nakaraang buwan</p>
+          <button class="btn btn-outline btn-sm">I-download PDF</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="../assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Auth Check
+  if (!PahatidAuth.isLoggedIn() || PahatidAuth.getRole() !== 'admin') {
+    window.location.href = 'login.html';
+    return;
+  }
+  document.getElementById('adminName').textContent = PahatidStore.get('user_id', 'Admin');
+
+  // Sidebar Mobile Toggle
+  document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+    document.getElementById('sidebar')?.classList.add('expanded');
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    PahatidAuth.logout('login.html');
+  });
+
+  // Driver Search Filter
+  const searchInput = document.getElementById('driverSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const term = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#driversBody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+});
+</script>
+
+<style>
+/* Admin Specific Styles */
+.admin-body {
+  background: #f3f4f6;
+}
+.admin-sidebar {
+  --sidebar-bg: #111827;
+}
+.admin-stats {
+  grid-template-columns: repeat(4, 1fr);
+}
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-online { background: #d1fae5; color: #065f46; }
+.badge-offline { background: #e5e7eb; color: #4b5563; }
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.table-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.625rem 1rem;
+  border: 2px solid var(--color-light);
+  border-radius: var(--radius-md);
+}
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+.report-card {
+  background: white;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.report-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: var(--space-sm) 0;
+}
+.report-change {
+  font-size: 0.875rem;
+  margin-bottom: var(--space-md);
+}
+.report-change.up { color: var(--color-success); }
+@media (max-width: 768px) {
+  .admin-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .admin-stats { grid-template-columns: 1fr; }
+  .table-actions { flex-direction: column; }
+}
+</style>
+</body>
+</html>
