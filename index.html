@@ -231,7 +231,9 @@ Version: 2.0.0 (Path A - Serverless)
     <!-- App Logic -->
     <script type="module">
         import { supabase, APP_CONFIG } from './assets/js/config.js';
+import { initDynamicContent } from './assets/js/dynamic-loader.js'; // ADD THIS LINE
 
+// ... rest of your existing JS logic ...
         // Check if user is already logged in to redirect them
         async function checkSession() {
             const { data: { session } } = await supabase.auth.getSession();
