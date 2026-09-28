@@ -623,3 +623,180 @@ p { margin-bottom: 1rem; }
 END OF FILE: main.css
 NEXT FILE: assets/js/common.js — Shared JavaScript Functions
 ----------------------------------------------------------------------------- */
+
+
+/* =============================================
+SIDEBAR / SIDE MENU — ✅ NEW
+============================================= */
+:root {
+  --sidebar-width-collapsed: 64px;
+  --sidebar-width-expanded: 260px;
+  --sidebar-bg: #1f2937;
+  --sidebar-color: #e5e7eb;
+  --sidebar-hover: #374151;
+  --sidebar-active: #2563eb;
+}
+
+/* Sidebar Base */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width-collapsed);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-color);
+  z-index: 900;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+.sidebar-header {
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #374151;
+  min-height: 64px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-weight: 700;
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.sidebar-brand-icon { font-size: 1.5rem; }
+.sidebar-brand-text { opacity: 0; transition: opacity 0.2s ease; }
+.sidebar.expanded .sidebar-brand-text { opacity: 1; }
+
+.sidebar-toggle-btn {
+  background: transparent;
+  color: inherit;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.sidebar-toggle-btn:hover { background: var(--sidebar-hover); }
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-md) 0;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  color: var(--sidebar-color);
+  white-space: nowrap;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+.sidebar-link:hover {
+  background: var(--sidebar-hover);
+  border-left-color: var(--color-primary-light);
+}
+.sidebar-link.active {
+  background: rgba(37, 99, 235, 0.2);
+  border-left-color: var(--color-primary);
+  color: white;
+}
+
+.sidebar-link-icon { font-size: 1.25rem; min-width: 24px; text-align: center; }
+.sidebar-link-text { opacity: 0; transition: opacity 0.2s ease; }
+.sidebar.expanded .sidebar-link-text { opacity: 1; }
+
+.sidebar-footer {
+  padding: var(--space-md);
+  border-top: 1px solid #374151;
+}
+
+/* Main Content Offset — Push content right */
+.main-content {
+  margin-left: var(--sidebar-width-collapsed);
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+}
+.sidebar.expanded + .main-content,
+body:has(.sidebar.expanded) .main-content {
+  margin-left: var(--sidebar-width-expanded);
+}
+
+/* Mobile Overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Mobile Behavior */
+@media (max-width: 767px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-width-expanded);
+  }
+  .sidebar.expanded {
+    transform: translateX(0);
+  }
+  .main-content { margin-left: 0; }
+}
+
+/* Sidebar page template example — for reference */
+/*
+<aside id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon">🛵</span>
+      <span class="sidebar-brand-text">PAHATID</span>
+    </div>
+    <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Toggle menu">◀</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#dashboard" class="sidebar-link active">
+      <span class="sidebar-link-icon">📊</span>
+      <span class="sidebar-link-text">Dashboard</span>
+    </a>
+    <a href="#calculator" class="sidebar-link">
+      <span class="sidebar-link-icon">🧮</span>
+      <span class="sidebar-link-text">Kalkulador</span>
+    </a>
+    <a href="#rides" class="sidebar-link">
+      <span class="sidebar-link-icon">📋</span>
+      <span class="sidebar-link-text">Talaan ng Biyahe</span>
+    </a>
+    <a href="#earnings" class="sidebar-link">
+      <span class="sidebar-link-icon">💰</span>
+      <span class="sidebar-link-text">Kita at Gastos</span>
+    </a>
+    <a href="#settings" class="sidebar-link">
+      <span class="sidebar-link-icon">⚙️</span>
+      <span class="sidebar-link-text">Mga Setting</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="#" class="sidebar-link" onclick="PahatidAuth.logout()">
+      <span class="sidebar-link-icon">🚪</span>
+      <span class="sidebar-link-text">Mag-Logout</span>
+    </a>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<main id="mainContent" class="main-content">
+  <!-- Page content here -->
+</main>
+*/
+
