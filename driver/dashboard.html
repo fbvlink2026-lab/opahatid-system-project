@@ -1,0 +1,653 @@
+<!-- -----------------------------------------------------------------------------
+PAHATID SYSTEM — Habal-Habal Transport Services Platform
+FILE: driver/dashboard.html
+TYPE: Driver Portal — Main Dashboard
+VERSION: 1.0.0
+LAST UPDATED: 2026-09-28
+STATUS: Active — Ready for Implementation
+DEPLOYMENT: GitHub Pages Compatible — Pure HTML/CSS/JS
+SECURITY: Client-side only | No credentials exposed
+FEATURES: Sidebar • Speedometer • GPS • Fare Calc • Fuel Tracking • Earnings
+-----------------------------------------------------------------------------
+ PURPOSE:
+ Driver's main workspace — real-time GPS dashboard + income/fuel calculator
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Drayber | PAHATID SYSTEM</title>
+  <meta name="description" content="Iyong biyahe, kita, at gastos — lahat sa isang lugar. Real-time GPS at kalkulador.">
+  <meta name="theme-color" content="#f97316">
+
+  <link rel="icon" href="../assets/icons/favicon.ico">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="dashboard-body">
+
+<!-- ==============================================
+SIDEBAR
+============================================== -->
+<aside id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon">🛵</span>
+      <span class="sidebar-brand-text">PAHATID</span>
+    </div>
+    <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Buksan/isara menu">◀</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="#dashboard" class="sidebar-link active">
+      <span class="sidebar-link-icon">📊</span>
+      <span class="sidebar-link-text">Dashboard</span>
+    </a>
+    <a href="#calculator" class="sidebar-link">
+      <span class="sidebar-link-icon">🧮</span>
+      <span class="sidebar-link-text">Kalkulador</span>
+    </a>
+    <a href="#fuel" class="sidebar-link">
+      <span class="sidebar-link-icon">⛽</span>
+      <span class="sidebar-link-text">Gasolina</span>
+    </a>
+    <a href="#history" class="sidebar-link">
+      <span class="sidebar-link-icon">📋</span>
+      <span class="sidebar-link-text">Talaan</span>
+    </a>
+    <a href="#earnings" class="sidebar-link">
+      <span class="sidebar-link-icon">💰</span>
+      <span class="sidebar-link-text">Kita</span>
+    </a>
+    <a href="#settings" class="sidebar-link">
+      <span class="sidebar-link-icon">⚙️</span>
+      <span class="sidebar-link-text">Mga Setting</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <span class="sidebar-link-icon">👤</span>
+      <span class="sidebar-link-text" id="userName">Drayber</span>
+    </div>
+    <a href="#" class="sidebar-link" id="logoutBtn">
+      <span class="sidebar-link-icon">🚪</span>
+      <span class="sidebar-link-text">Mag-Logout</span>
+    </a>
+  </div>
+</aside>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- ==============================================
+MAIN CONTENT
+============================================== -->
+<main id="mainContent" class="main-content">
+
+  <!-- Top Bar -->
+  <header class="dashboard-topbar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    <h1 class="dashboard-title">Iyong Dashboard</h1>
+    <div class="topbar-status">
+      <span id="gpsStatus" class="status-indicator status-offline">📍 GPS Naka-off</span>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+
+    <!-- ==============================================
+    SECTION 1: SPEEDOMETER & GPS
+    ============================================== -->
+    <section id="dashboard" class="dashboard-section">
+      <h2 class="section-title">📡 Real-Time Status</h2>
+      
+      <div class="speedometer-card">
+        <div class="speedometer-wrapper">
+          <svg class="speedometer-svg" viewBox="0 0 200 120">
+            <!-- Background Arc -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="12" stroke-linecap="round"/>
+            <!-- Progress Arc -->
+            <path id="speedArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f97316" stroke-width="12" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+            <!-- Center Display -->
+            <text x="100" y="85" text-anchor="middle" class="speed-value" id="speedValue">0</text>
+            <text x="100" y="105" text-anchor="middle" class="speed-unit">km/h</text>
+          </svg>
+        </div>
+
+        <div class="gps-stats">
+          <div class="gps-stat">
+            <span class="gps-label">Lokasyon</span>
+            <span class="gps-value" id="gpsCoords">— Naka-off</span>
+          </div>
+          <div class="gps-stat">
+            <span class="gps-label">Distansya</span>
+            <span class="gps-value" id="gpsDistance">0.00 km</span>
+          </div>
+          <div class="gps-stat">
+            <span class="gps-label">Katumpakan</span>
+            <span class="gps-value" id="gpsAccuracy">—</span>
+          </div>
+        </div>
+
+        <div class="gps-controls">
+          <button id="gpsToggle" class="btn btn-primary">📍 I-ON ang GPS</button>
+          <button id="gpsReset" class="btn btn-outline">🔄 I-reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+    SECTION 2: FARE CALCULATOR
+    ============================================== -->
+    <section id="calculator" class="dashboard-section">
+      <h2 class="section-title">🧮 Kalkulador ng Pamasahe</h2>
+      
+      <div class="calculator-card">
+        <div class="calc-inputs">
+          <div class="form-group">
+            <label>Distansya (km)</label>
+            <input type="number" id="calcDistance" step="0.01" min="0" placeholder="Hal. 5.2" value="0">
+          </div>
+          <div class="form-group">
+            <label>Oras ng Biyahe (minuto)</label>
+            <input type="number" id="calcMinutes" step="1" min="0" placeholder="Hal. 15" value="0">
+          </div>
+          <div class="form-group">
+            <label>Batayang Presyo (₱/km)</label>
+            <input type="number" id="ratePerKm" step="0.5" min="5" value="15.00">
+          </div>
+          <div class="form-group">
+            <label>Bayad sa Oras (₱/minuto)</label>
+            <input type="number" id="ratePerMin" step="0.5" min="0" value="2.00">
+          </div>
+        </div>
+
+        <div class="calc-result">
+          <h3>Kabuuan</h3>
+          <div class="fare-breakdown">
+            <div class="fare-row">
+              <span>Distansya:</span>
+              <span id="fareDistance">₱0.00</span>
+            </div>
+            <div class="fare-row">
+              <span>Oras:</span>
+              <span id="fareTime">₱0.00</span>
+            </div>
+            <div class="fare-row fare-total">
+              <span>PAMASAHE:</span>
+              <span id="fareTotal">₱0.00</span>
+            </div>
+          </div>
+          <button id="saveFare" class="btn btn-secondary btn-block">💾 Itala ang Biyahe</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+    SECTION 3: FUEL & EXPENSES
+    ============================================== -->
+    <section id="fuel" class="dashboard-section">
+      <h2 class="section-title">⛽ Gasolina at Gastos</h2>
+      
+      <div class="fuel-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Presyo ng Gasolina (₱/L)</label>
+            <input type="number" id="fuelPrice" step="0.5" min="40" value="70.00">
+          </div>
+          <div class="form-group">
+            <label>Konsumo (km/L)</label>
+            <input type="number" id="fuelEfficiency" step="0.1" min="1" value="45">
+          </div>
+        </div>
+        
+        <div class="fuel-stats">
+          <div class="fuel-stat">
+            <span class="fuel-label">Gastos sa Gasolina</span>
+            <span class="fuel-value" id="fuelCostPerKm">₱0.00/km</span>
+          </div>
+          <div class="fuel-stat">
+            <span class="fuel-label">Netong Kita sa Biyahe</span>
+            <span class="fuel-value profit" id="netEarnings">₱0.00</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+    SECTION 4: EARNINGS SUMMARY
+    ============================================== -->
+    <section id="earnings" class="dashboard-section">
+      <h2 class="section-title">💰 Buod ng Kita — Ngayong Araw</h2>
+      
+      <div class="earnings-grid">
+        <div class="earnings-card">
+          <span class="earnings-label">Kabuuang Kita</span>
+          <span class="earnings-value" id="totalEarnings">₱0.00</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Gastos sa Gasolina</span>
+          <span class="earnings-value expense" id="totalFuelCost">₱0.00</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Netong Kita</span>
+          <span class="earnings-value profit" id="dailyNet">₱0.00</span>
+        </div>
+        <div class="earnings-card">
+          <span class="earnings-label">Bilang ng Biyahe</span>
+          <span class="earnings-value" id="rideCount">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+    SECTION 5: RIDE HISTORY
+    ============================================== -->
+    <section id="history" class="dashboard-section">
+      <h2 class="section-title">📋 Talaan ng Biyahe</h2>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Petsa</th>
+              <th>Distansya</th>
+              <th>Pamasahe</th>
+              <th>Gasolina</th>
+              <th>Netong Kita</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr class="empty-row">
+              <td colspan="5">Wala pang naitalang biyahe — simulan na ang pagtala!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="../assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // --- Auth Check ---
+  if (!PahatidAuth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+  document.getElementById('userName').textContent = PahatidStore.get('user_id', 'Drayber');
+
+  // --- Sidebar Mobile ---
+  document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+    document.getElementById('sidebar')?.classList.add('expanded');
+  });
+
+  // --- Logout ---
+  document.getElementById('logoutBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    PahatidAuth.logout('login.html');
+  });
+
+  // --- State ---
+  let gpsActive = false;
+  let watchId = null;
+  let lastPos = null;
+  let totalDistance = 0;
+  let rideHistory = PahatidStore.get('ride_history', []);
+
+  // --- DOM Elements ---
+  const speedValue = document.getElementById('speedValue');
+  const speedArc = document.getElementById('speedArc');
+  const gpsStatus = document.getElementById('gpsStatus');
+  const gpsCoords = document.getElementById('gpsCoords');
+  const gpsDistance = document.getElementById('gpsDistance');
+  const gpsAccuracy = document.getElementById('gpsAccuracy');
+  const gpsToggle = document.getElementById('gpsToggle');
+  const gpsReset = document.getElementById('gpsReset');
+
+  const calcDistance = document.getElementById('calcDistance');
+  const calcMinutes = document.getElementById('calcMinutes');
+  const ratePerKm = document.getElementById('ratePerKm');
+  const ratePerMin = document.getElementById('ratePerMin');
+  const fuelPrice = document.getElementById('fuelPrice');
+  const fuelEfficiency = document.getElementById('fuelEfficiency');
+
+  // --- GPS Toggle ---
+  gpsToggle.addEventListener('click', () => {
+    if (!gpsActive) startGPS();
+    else stopGPS();
+  });
+  gpsReset.addEventListener('click', resetGPS);
+
+  function startGPS() {
+    if (!navigator.geolocation) {
+      PahatidNotify.error('Hindi suportado ang GPS sa browser na ito');
+      return;
+    }
+    gpsActive = true;
+    gpsToggle.textContent = '⏹️ I-OFF ang GPS';
+    gpsToggle.classList.replace('btn-primary', 'btn-secondary');
+    gpsStatus.className = 'status-indicator status-online';
+    gpsStatus.textContent = '📍 GPS Aktibo';
+
+    watchId = navigator.geolocation.watchPosition(
+      updatePosition,
+      handleGPSError,
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    );
+  }
+
+  function stopGPS() {
+    gpsActive = false;
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+    gpsToggle.textContent = '📍 I-ON ang GPS';
+    gpsToggle.classList.replace('btn-secondary', 'btn-primary');
+    gpsStatus.className = 'status-indicator status-offline';
+    gpsStatus.textContent = '📍 GPS Naka-off';
+    speedValue.textContent = '0';
+    speedArc.style.strokeDashoffset = '251.2';
+  }
+
+  function resetGPS() {
+    lastPos = null;
+    totalDistance = 0;
+    updateDistanceDisplay();
+  }
+
+  function updatePosition(pos) {
+    const lat = pos.coords.latitude.toFixed(6);
+    const lng = pos.coords.longitude.toFixed(6);
+    const speedKmh = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : 0;
+    const accuracy = pos.coords.accuracy.toFixed(0);
+
+    gpsCoords.textContent = `${lat}, ${lng}`;
+    gpsAccuracy.textContent = `±${accuracy}m`;
+    
+    // Update Speedometer
+    speedValue.textContent = speedKmh;
+    const maxSpeed = 100;
+    const progress = Math.min(speedKmh / maxSpeed, 1);
+    speedArc.style.strokeDashoffset = 251.2 * (1 - progress);
+
+    // Calculate Distance
+    if (lastPos) {
+      const dist = haversine(lastPos, pos.coords);
+      totalDistance += dist;
+      updateDistanceDisplay();
+      // Auto-fill calculator distance
+      if (calcDistance && totalDistance > 0) {
+        calcDistance.value = totalDistance.toFixed(2);
+        calculateFare();
+      }
+    }
+    lastPos = pos.coords;
+  }
+
+  function handleGPSError(err) {
+    let msg = 'Hindi makuha ang lokasyon';
+    if (err.code === 1) msg = 'Tinanggihan ang pahintulot sa lokasyon';
+    if (err.code === 2) msg = 'Hindi matukoy ang lokasyon';
+    if (err.code === 3) msg = 'Tumagal ang paghahanap';
+    PahatidNotify.warn(msg);
+    stopGPS();
+  }
+
+  function updateDistanceDisplay() {
+    gpsDistance.textContent = totalDistance.toFixed(2) + ' km';
+  }
+
+  // Haversine formula — distance between coords in km
+  function haversine(p1, p2) {
+    const R = 6371;
+    const dLat = (p2.latitude - p1.latitude) * Math.PI / 180;
+    const dLng = (p2.longitude - p1.longitude) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(p1.latitude*Math.PI/180)*Math.cos(p2.latitude*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  // --- Fare Calculation ---
+  [calcDistance, calcMinutes, ratePerKm, ratePerMin, fuelPrice, fuelEfficiency].forEach(el => {
+    el.addEventListener('input', calculateFare);
+  });
+  document.getElementById('saveFare').addEventListener('click', saveRide);
+
+  function calculateFare() {
+    const d = parseFloat(calcDistance.value) || 0;
+    const m = parseFloat(calcMinutes.value) || 0;
+    const rKm = parseFloat(ratePerKm.value) || 0;
+    const rMin = parseFloat(ratePerMin.value) || 0;
+    const fPrice = parseFloat(fuelPrice.value) || 0;
+    const fEff = parseFloat(fuelEfficiency.value) || 1;
+
+    const fareDist = d * rKm;
+    const fareTime = m * rMin;
+    const total = fareDist + fareTime;
+    const fuelPerKm = fPrice / fEff;
+    const fuelCost = d * fuelPerKm;
+    const net = total - fuelCost;
+
+    document.getElementById('fareDistance').textContent = PahatidFormat.currency(fareDist);
+    document.getElementById('fareTime').textContent = PahatidFormat.currency(fareTime);
+    document.getElementById('fareTotal').textContent = PahatidFormat.currency(total);
+    document.getElementById('fuelCostPerKm').textContent = PahatidFormat.currency(fuelPerKm) + '/km';
+    document.getElementById('netEarnings').textContent = PahatidFormat.currency(net);
+    document.getElementById('netEarnings').className = `fuel-value ${net >= 0 ? 'profit' : 'loss'}`;
+  }
+
+  function saveRide() {
+    const d = parseFloat(calcDistance.value) || 0;
+    const fareDist = d * (parseFloat(ratePerKm.value) || 0);
+    const fareTime = (parseFloat(calcMinutes.value) || 0) * (parseFloat(ratePerMin.value) || 0);
+    const total = fareDist + fareTime;
+    const fuelCost = d * ((parseFloat(fuelPrice.value) || 0) / (parseFloat(fuelEfficiency.value) || 1));
+    const net = total - fuelCost;
+
+    if (d <= 0 && total <= 0) {
+      PahatidNotify.warn('Ilagay muna ang detalye ng biyahe');
+      return;
+    }
+
+    const ride = {
+      date: new Date().toISOString(),
+      distance: d,
+      fare: total,
+      fuelCost: fuelCost,
+      net: net
+    };
+    rideHistory.unshift(ride);
+    PahatidStore.set('ride_history', rideHistory);
+    
+    updateHistoryDisplay();
+    updateEarningsDisplay();
+    
+    // Reset inputs
+    calcDistance.value = '';
+    calcMinutes.value = '';
+    totalDistance = 0;
+    updateDistanceDisplay();
+    
+    PahatidNotify.success('Naitala ang biyahe! ✅');
+  }
+
+  function updateHistoryDisplay() {
+    const tbody = document.getElementById('historyBody');
+    if (!rideHistory.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Wala pang naitalang biyahe — simulan na ang pagtala!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rideHistory.slice(0, 10).map(r => `
+      <tr>
+        <td>${PahatidFormat.dateShort(r.date)}</td>
+        <td>${r.distance.toFixed(2)} km</td>
+        <td>${PahatidFormat.currency(r.fare)}</td>
+        <td>${PahatidFormat.currency(r.fuelCost)}</td>
+        <td class="${r.net >= 0 ? 'profit' : 'loss'}">${PahatidFormat.currency(r.net)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function updateEarningsDisplay() {
+    const totalFare = rideHistory.reduce((s, r) => s + r.fare, 0);
+    const totalFuel = rideHistory.reduce((s, r) => s + r.fuelCost, 0);
+    const totalNet = rideHistory.reduce((s, r) => s + r.net, 0);
+    
+    document.getElementById('totalEarnings').textContent = PahatidFormat.currency(totalFare);
+    document.getElementById('totalFuelCost').textContent = PahatidFormat.currency(totalFuel);
+    document.getElementById('dailyNet').textContent = PahatidFormat.currency(totalNet);
+    document.getElementById('rideCount').textContent = rideHistory.length;
+  }
+
+  // --- Initial Load ---
+  updateHistoryDisplay();
+  updateEarningsDisplay();
+  calculateFare();
+});
+</script>
+
+<style>
+/* === Dashboard Specific Styles === */
+.dashboard-body {
+  background: #f9fafb;
+}
+
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: white;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mobile-menu-btn {
+  display: none;
+  font-size: 1.25rem;
+  padding: var(--space-sm);
+}
+
+.dashboard-title {
+  flex: 1;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.topbar-status {
+  font-size: 0.875rem;
+}
+
+.status-indicator {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+.status-online { background: #d1fae5; color: #065f46; }
+.status-offline { background: #f3f4f6; color: #4b5563; }
+
+.dashboard-container {
+  padding: var(--space-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.speedometer-card, .calculator-card, .fuel-card, .earnings-grid {
+  background: white;
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.speedometer-wrapper {
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+.speedometer-svg { width: 100%; max-width: 320px; }
+.speed-value { font-size: 2.5rem; font-weight: 700; fill: var(--color-dark); }
+.speed-unit { font-size: 0.875rem; fill: var(--color-medium); }
+
+.gps-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.gps-stat { text-align: center; }
+.gps-label { display: block; font-size: 0.75rem; color: var(--color-medium); }
+.gps-value { display: block; font-weight: 600; font-size: 0.9rem; word-break: break-all; }
+
+.gps-controls {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.calculator-card {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-xl);
+}
+.calc-inputs, .calc-result { display: flex; flex-direction: column; gap: var(--space-md); }
+.calc-result { background: var(--color-primary-bg); padding: var(--space-lg); border-radius: var(--radius-lg); }
+.calc-result h3 { text-align: center; margin-bottom: var(--space-sm); }
+.fare-row { display: flex; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid #ddd; }
+.fare-total { font-weight: 700; font-size: 1.25rem; border-bottom: none; margin-top: var(--space-sm); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+
+.fuel-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg); margin-top: var(--space-md); }
+.fuel-stat { text-align: center; padding: var(--space-md); background: var(--color-lighter); border-radius: var(--radius-md); }
+.fuel-label { display: block; font-size: 0.875rem; color: var(--color-medium); }
+.fuel-value { display: block; font-size: 1.25rem; font-weight: 700; margin-top: var(--space-xs); }
+.profit { color: var(--color-success); }
+.loss { color: var(--color-danger); }
+.expense { color: var(--color-danger); }
+
+.earnings-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); padding: 0; box-shadow: none; }
+.earnings-card { background: white; padding: var(--space-lg); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-align: center; }
+.earnings-label { display: block; font-size: 0.875rem; color: var(--color-medium); }
+.earnings-value { display: block; font-size: 1.5rem; font-weight: 700; margin-top: var(--space-xs); }
+
+.history-table-wrap { overflow-x: auto; }
+.history-table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.history-table th, .history-table td { padding: var(--space-md); text-align: left; border-bottom: 1px solid var(--color-light); }
+.history-table th { background: var(--color-lighter); font-weight: 600; }
+.empty-row td { text-align: center; color: var(--color-medium); padding: var(--space-xl); }
+
+.sidebar-user { padding: var(--space-sm) var(--space-md); color: var(--color-light); font-size: 0.9rem; border-bottom: 1px solid #374151; margin-bottom: var(--space-sm); }
+
+/* Mobile */
+@media (max-width: 767px) {
+  .mobile-menu-btn { display: block; }
+  .dashboard-title { font-size: 1rem; }
+  .gps-stats { grid-template-columns: 1fr; }
+  .calculator-card { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .fuel-stats { grid-template-columns: 1fr; }
+  .earnings-grid { grid-template-columns: repeat(2, 1fr); }
+  .gps-controls { flex-direction: column; }
+  .dashboard-container { padding: var(--space-md); }
+  .speedometer-card, .calculator-card, .fuel-card { padding: var(--space-lg); }
+}
+@media (max-width: 480px) {
+  .earnings-grid { grid-template-columns: 1fr; }
+}
+</style>
+</body>
+</html>
+<!-- -----------------------------------------------------------------------------
+END OF FILE: driver/dashboard.html
+NEXT FILES: Commuter pages, Admin pages, Documentation — Your choice!
+----------------------------------------------------------------------------- -->
