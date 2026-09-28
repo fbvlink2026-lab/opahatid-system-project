@@ -1,0 +1,373 @@
+<!-- -----------------------------------------------------------------------------
+PAHATID SYSTEM — Habal-Habal Transport Services Platform
+FILE: driver/login.html
+TYPE: Driver Portal — Login Page
+VERSION: 1.0.0
+LAST UPDATED: 2026-09-28
+STATUS: Active — Ready for Implementation
+DEPLOYMENT: GitHub Pages Compatible — Pure HTML/CSS/JS
+SECURITY: No credentials exposed | Client-side validation only
+-----------------------------------------------------------------------------
+ PURPOSE:
+ Driver authentication entry — login form, registration link,
+ and redirect to dashboard after successful auth
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drayber — Mag-Login | PAHATID SYSTEM</title>
+  <meta name="description" content="Mag-login sa Drayber Portal ng PAHATID — pamahalaan ang biyahe, kita, at talaan ng gasolina.">
+  
+  <!-- Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://YOUR-USERNAME.github.io/pahatid-system/driver/login.html">
+  <meta property="og:title" content="Drayber — Mag-Login | PAHATID SYSTEM">
+  <meta property="og:description" content="Ipasok ang iyong account para makapagsimula — kalkulahin ang kita, subaybayan ang gasolina, at pamahalaan ang biyahe.">
+  <meta property="og:image" content="https://YOUR-USERNAME.github.io/pahatid-system/assets/images/social-preview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#f97316">
+
+  <link rel="icon" href="../assets/icons/favicon.ico">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="auth-page">
+
+<!-- ==============================================
+TOP NAVIGATION
+============================================== -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-brand">
+      <span class="brand-icon">🛵</span>
+      <span class="brand-text">PAHATID</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="../index.html">Tahanan</a></li>
+      <li><a href="../commuter/book.html">Pasahero</a></li>
+      <li><a href="login.html" class="active">Drayber</a></li>
+      <li><a href="../admin/login.html">Admin</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ==============================================
+LOGIN CARD — CENTERED
+============================================== -->
+<main class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="auth-icon">🏍️</span>
+      <h1>Drayber — Mag-Login</h1>
+      <p>Ipasok ang iyong impormasyon para makapasok sa iyong talaan</p>
+    </div>
+
+    <form id="driverLoginForm" class="auth-form">
+      <div class="form-group">
+        <label for="driverId">ID ng Drayber o Email</label>
+        <input 
+          type="text" 
+          id="driverId" 
+          name="driverId" 
+          required
+          autocomplete="username"
+          placeholder="Hal. D-001 o pangalan@email.com"
+        >
+        <span class="form-error" id="driverIdError"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">
+          Password
+          <button type="button" id="togglePassword" class="password-toggle" aria-label="Ipakita ang password">👁️</button>
+        </label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required
+          autocomplete="current-password"
+          placeholder="Iyong password"
+        >
+        <span class="form-error" id="passwordError"></span>
+      </div>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="rememberMe"> Tandaan ang aking pagpasok
+      </label>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        ✅ Mag-Login
+      </button>
+
+      <div class="auth-divider">
+        <span>o</span>
+      </div>
+
+      <p class="auth-links">
+        Wala pang account? 
+        <a href="register.html" class="link-primary">Magparehistro →</a>
+      </p>
+      <p class="auth-links">
+        Nakalimutan ang password? 
+        <a href="forgot-password.html" class="link-secondary">I-reset →</a>
+      </p>
+    </form>
+
+    <div id="loginStatus" class="form-status" role="alert"></div>
+  </div>
+</main>
+
+<!-- ==============================================
+FOOTER
+============================================== -->
+<footer class="auth-footer">
+  <p>© 2026 PAHATID SYSTEM — Para sa mga Drayber ng Habal-Habal<br>
+  <a href="../index.html">Bumalik sa Tahanan</a> | 
+  <a href="../docs/user-guide.html">Gabay sa Paggamit</a></p>
+</footer>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="../assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('driverLoginForm');
+  const togglePw = document.getElementById('togglePassword');
+  const pwInput = document.getElementById('password');
+  const statusEl = document.getElementById('loginStatus');
+
+  // Password show/hide
+  togglePw.addEventListener('click', () => {
+    const isPw = pwInput.type === 'password';
+    pwInput.type = isPw ? 'text' : 'password';
+    togglePw.textContent = isPw ? '🙈' : '👁️';
+  });
+
+  // Form submit
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Clear errors
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    statusEl.className = 'form-status';
+    statusEl.textContent = '';
+
+    const driverId = document.getElementById('driverId').value.trim();
+    const password = pwInput.value;
+    const remember = document.getElementById('rememberMe').checked;
+
+    // Validation
+    let valid = true;
+    if (!PahatidValid.text(driverId, 100)) {
+      document.getElementById('driverIdError').textContent = 'Ilagay ang tamang ID o email';
+      valid = false;
+    }
+    if (!password || password.length < 4) {
+      document.getElementById('passwordError').textContent = 'Hindi bababa sa 4 na titik';
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    // Simulate login — replace with real auth later
+    statusEl.className = 'form-status form-loading';
+    statusEl.textContent = 'Sinusuri ang impormasyon...';
+
+    setTimeout(() => {
+      // Save session
+      PahatidStore.set('user_role', 'driver');
+      PahatidStore.set('user_id', driverId);
+      
+      statusEl.className = 'form-status form-success';
+      statusEl.textContent = '✅ Matagumpay! Inililipat sa Dashboard...';
+      
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 800);
+    }, 1000);
+  });
+});
+</script>
+
+<!-- Optional CSS for this page — add to main.css if needed -->
+<style>
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+  padding-top: 80px;
+}
+
+.auth-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.auth-card {
+  background: white;
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.auth-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+
+.auth-header h1 {
+  font-size: 1.5rem;
+  color: var(--color-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.auth-header p {
+  color: var(--color-medium);
+  font-size: 0.95rem;
+}
+
+.form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--color-dark);
+}
+
+.password-toggle {
+  font-size: 1rem;
+  padding: 0;
+  color: var(--color-medium);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-light);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.form-error {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.875rem;
+  color: var(--color-danger);
+  min-height: 1.2rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--color-medium);
+  cursor: pointer;
+}
+
+.auth-divider {
+  text-align: center;
+  margin: var(--space-lg) 0;
+  position: relative;
+  color: var(--color-medium);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--color-light);
+}
+
+.auth-divider::before { left: 0; }
+.auth-divider::after { right: 0; }
+
+.auth-links {
+  text-align: center;
+  margin: var(--space-sm) 0;
+  font-size: 0.95rem;
+}
+
+.link-primary { color: var(--color-primary); font-weight: 600; }
+.link-primary:hover { text-decoration: underline; }
+.link-secondary { color: var(--color-secondary); font-weight: 600; }
+.link-secondary:hover { text-decoration: underline; }
+
+.form-status {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  text-align: center;
+  display: none;
+}
+
+.form-status.visible,
+.form-status:empty { display: block; min-height: 44px; }
+
+.form-loading {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: block;
+}
+
+.form-success {
+  background: #d1fae5;
+  color: var(--color-success);
+  display: block;
+}
+
+.auth-footer {
+  text-align: center;
+  padding: var(--space-lg);
+  color: var(--color-medium);
+  font-size: 0.875rem;
+}
+
+.auth-footer a {
+  color: var(--color-primary);
+  margin: 0 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: var(--space-lg); }
+}
+</style>
+</body>
+</html>
+<!-- -----------------------------------------------------------------------------
+END OF FILE: driver/login.html
+NEXT FILE: driver/dashboard.html — Main Dashboard with Sidebar & Calculator
+----------------------------------------------------------------------------- -->
