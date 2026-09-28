@@ -87,11 +87,11 @@ Version: 2.0.0 (Path A - Serverless)
     <!-- Hero Section -->
     <header class="py-5 bg-gradient-primary text-white text-center position-relative overflow-hidden">
         <div class="container py-5">
-            <h1 class="display-4 fw-bold mb-3">Ride Smart, Ride Safe.</h1>
-            <p class="lead mb-4 opacity-75 mx-auto" style="max-width: 600px;">
-                The most comprehensive Habal-Habal management system. 
-                Transparent fares, real-time tracking, and secure payments.
-            </p>
+            <!-- NEW CODE -->
+<h1 class="display-4 fw-bold mb-3 cms-loading" data-cms-key="homepage_hero_title">Loading...</h1>
+<p class="lead mb-4 opacity-75 mx-auto" style="max-width: 600px;" data-cms-key="homepage_hero_subtitle">
+    Loading description...
+</p>
             <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
                 <a href="login.html?type=commuter" class="btn btn-warning btn-lg px-5 fw-bold shadow">
                     <i class="fas fa-plus-circle me-2"></i> Book a Ride
@@ -212,7 +212,7 @@ Version: 2.0.0 (Path A - Serverless)
             <hr class="mb-4">
             <div class="row align-items-center">
                 <div class="col-md-7 col-lg-8">
-                    <p>Copyright © 2026 All rights reserved by <span class="text-warning">Pahatid System</span>.</p>
+                    <p>Copyright Â© 2026 All rights reserved by <span class="text-warning">Pahatid System</span>.</p>
                 </div>
                 <div class="col-md-5 col-lg-4">
                     <div class="text-center text-md-end">
@@ -282,7 +282,7 @@ Version: 2.0.0 (Path A - Serverless)
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <h6 class="card-subtitle mb-0 text-muted">${review.profiles?.full_name || 'Anonymous'}</h6>
-                                        <span class="badge bg-warning text-dark">${review.rating_stars} ★</span>
+                                        <span class="badge bg-warning text-dark">${review.rating_stars} â</span>
                                     </div>
                                     <p class="card-text small text-dark">"${review.comment_text}"</p>
                                     <small class="text-muted">Trip Ref: ${review.bookings?.reference_code || 'N/A'}</small>
