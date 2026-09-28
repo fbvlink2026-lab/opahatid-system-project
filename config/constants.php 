@@ -1,0 +1,86 @@
+<?php
+// =========================================
+// Project: Pahatid System Project
+// File: config/constants.php
+// Description: Global System Constants & Configuration Values
+// Author: AI Assistant
+// Date: 2026-09-29
+// Version: 1.0.0
+// =========================================
+
+// Define Base Path for includes/requires
+define('BASE_PATH', dirname(__DIR__, 2));
+define('ASSETS_URL', '/assets'); // Adjust if hosted in subfolder
+define('API_URL', '/api');       // Future proofing for AJAX calls
+
+// Currency Settings
+define('CURRENCY_SYMBOL', '₱');
+define('CURRENCY_CODE', 'PHP');
+
+// Fare Calculation Defaults (Fallbacks if DB fails)
+define('DEFAULT_BASE_FARE', 40.00);
+define('DEFAULT_KM_RATE', 15.00);
+define('MINIMUM_FARE', 50.00);
+define('SURGE_MAX_MULTIPLIER', 2.50);
+
+// User Roles
+const ROLE_ADMIN = 'admin';
+const ROLE_DISPATCHER = 'dispatcher';
+const ROLE_DRIVER = 'driver';
+const ROLE_COMMUTER = 'commuter';
+
+// Trip Statuses
+const STATUS_REQUESTED = 'requested';
+const STATUS_ACCEPTED = 'accepted';
+const STATUS_ARRIVED_PICKUP = 'arrived_pickup';
+const STATUS_IN_PROGRESS = 'in_progress';
+const STATUS_COMPLETED = 'completed';
+const STATUS_CANCELLED = 'cancelled';
+const STATUS_NO_SHOW = 'no_show';
+
+// Payment Methods
+const PAY_CASH = 'cash';
+const PAY_WALLET = 'wallet';
+const PAY_GCASH = 'gcash';
+const PAY_PAYMAYA = 'paymaya';
+
+// Driver Ranks
+const RANK_NEWBIE = 'newbie';
+const RANK_REGULAR = 'regular';
+const RANK_SENIOR = 'senior';
+const RANK_EXPERT = 'expert';
+const RANK_MASTER = 'master';
+
+// Expense Categories
+const EXP_FUEL = 'fuel_gasoline';
+const EXP_OIL = 'oil_change';
+const EXP_PARTS = 'parts_maintenance';
+const EXP_RENTAL = 'daily_rental_fee';
+const EXP_FOOD = 'food_meals';
+const EXP_OTHER = 'other';
+
+// Security & Session
+define('SESSION_LIFETIME', 3600); // 1 hour in seconds
+define('PASSWORD_MIN_LENGTH', 8);
+define('LOGIN_ATTEMPTS_LIMIT', 5);
+define('LOCKOUT_TIME_SECONDS', 900); // 15 minutes lockout after failed attempts
+
+// API Keys / External Services Placeholders
+// These should ideally come from .env, but defined here for structure reference
+define('MAP_PROVIDER', 'leaflet_openstreetmap'); // Using free OSM tiles via Leaflet
+define('SMS_GATEWAY_ENABLED', false); // Turn off for free tier initially
+
+// Helper Function: Format Currency
+if (!function_exists('formatCurrency')) {
+    function formatCurrency($amount) {
+        return CURRENCY_SYMBOL . number_format((float)$amount, 2, '.', ',');
+    }
+}
+
+// Helper Function: Generate Unique Reference Code
+if (!function_exists('generateRefCode')) {
+    function generateRefCode() {
+        return 'PH-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
+    }
+}
+?>
