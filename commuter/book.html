@@ -1,0 +1,715 @@
+<!-- -----------------------------------------------------------------------------
+PAHATID SYSTEM — Habal-Habal Transport Services Platform
+FILE: commuter/book.html
+TYPE: Commuter Portal — Booking & Fare Estimate
+VERSION: 1.0.0
+LAST UPDATED: 2026-09-28
+STATUS: Active — Ready for Implementation
+DEPLOYMENT: GitHub Pages Compatible — Pure HTML/CSS/JS
+SECURITY: Client-side only | No credentials exposed
+FEATURES: Location Picker • Fare Estimator • Driver Match • Booking Status
+-----------------------------------------------------------------------------
+ PURPOSE:
+ Commuter trip request — estimate fare, set pickup/destination, connect to driver
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magpa-Biyahe | PAHATID SYSTEM — Pasahero</title>
+  <meta name="description" content="Maghanap ng drayber at alamin ang presyo bago sumakay. Mabilis, tapat, at sigurado.">
+  
+  <!-- Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://YOUR-USERNAME.github.io/pahatid-system/commuter/book.html">
+  <meta property="og:title" content="Magpa-Biyahe | PAHATID SYSTEM">
+  <meta property="og:description" content="Ilagay ang iyong pupuntahan — makikita mo agad ang presyo at maghahanap kami ng drayber para sa iyo.">
+  <meta property="og:image" content="https://YOUR-USERNAME.github.io/pahatid-system/assets/images/social-preview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#2563eb">
+
+  <link rel="icon" href="../assets/icons/favicon.ico">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="commuter-body">
+
+<!-- ==============================================
+TOP NAVIGATION
+============================================== -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="../index.html" class="nav-brand">
+      <span class="brand-icon">🛵</span>
+      <span class="brand-text">PAHATID</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="../index.html">Tahanan</a></li>
+      <li><a href="book.html" class="active">Magpa-Biyahe</a></li>
+      <li><a href="../driver/login.html">Drayber</a></li>
+      <li><a href="../admin/login.html">Admin</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ==============================================
+MAIN CONTENT
+============================================== -->
+<main class="commuter-main">
+  <div class="commuter-container">
+
+    <!-- Left: Booking Form -->
+    <section class="booking-card">
+      <h1 class="booking-title">📍 Magpa-Biyahe</h1>
+      
+      <form id="bookingForm" class="booking-form">
+        <!-- Pickup -->
+        <div class="form-group location-group">
+          <label for="pickup">Saan ka kukunin?</label>
+          <div class="input-with-btn">
+            <input 
+              type="text" 
+              id="pickup" 
+              name="pickup" 
+              required
+              placeholder="Hal. Pamantasan, Palengke, Terminal"
+            >
+            <button type="button" id="useMyLocation" class="loc-btn" title="Gamitin ang kasalukuyang lokasyon">📍</button>
+          </div>
+          <span class="form-error" id="pickupError"></span>
+        </div>
+
+        <!-- Destination -->
+        <div class="form-group location-group">
+          <label for="destination">Saan ang pupuntahan?</label>
+          <input 
+            type="text" 
+            id="destination" 
+            name="destination" 
+            required
+            placeholder="Hal. Bayan, Istasyon, Tahanan"
+          >
+          <span class="form-error" id="destError"></span>
+        </div>
+
+        <!-- Distance & Fare Rate -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tinatayang Distansya (km)</label>
+            <input type="number" id="estDistance" step="0.1" min="0" placeholder="0.0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Presyo bawat km (₱)</label>
+            <input type="number" id="fareRate" step="0.5" min="5" value="15.00">
+          </div>
+        </div>
+
+        <!-- Passengers -->
+        <div class="form-group">
+          <label>Bilang ng Sakay</label>
+          <div class="passenger-control">
+            <button type="button" id="minusPass" class="pass-btn">−</button>
+            <input type="number" id="passengers" min="1" max="3" value="1" readonly>
+            <button type="button" id="plusPass" class="pass-btn">+</button>
+          </div>
+        </div>
+
+        <!-- Fare Summary -->
+        <div class="fare-summary">
+          <div class="fare-row">
+            <span>Batayang Presyo:</span>
+            <span id="baseFare">₱0.00</span>
+          </div>
+          <div class="fare-row">
+            <span>Karagdagang Sakay:</span>
+            <span id="extraPassFare">₱0.00</span>
+          </div>
+          <div class="fare-row fare-total">
+            <span>KABUUANG PRESYO:</span>
+            <span id="totalFare">₱0.00</span>
+          </div>
+          <p class="fare-note">* Tinatayang halaga — maaaring magbago ayon sa totoong distansya</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <button type="submit" id="bookBtn" class="btn btn-primary btn-block btn-lg">
+          🚀 Maghanap ng Drayber
+        </button>
+      </form>
+    </section>
+
+    <!-- Right: Status / Driver Match -->
+    <section class="status-card" id="statusSection">
+      <h2 class="status-title">📋 Katayuan ng Biyahe</h2>
+      
+      <!-- Default State -->
+      <div id="statusIdle" class="status-content active">
+        <div class="status-icon">🛵</div>
+        <p class="status-text">Ilagay ang detalye sa kaliwa upang makapagsimula.</p>
+        <div class="status-features">
+          <div class="feature-item">✅ Makikita ang presyo bago sumakay</div>
+          <div class="feature-item">✅ Direkta sa drayber — walang tagapamagitan</div>
+          <div class="feature-item">✅ Abot-kayang pamasahe</div>
+        </div>
+      </div>
+
+      <!-- Searching State -->
+      <div id="statusSearching" class="status-content">
+        <div class="status-icon searching">🔍</div>
+        <p class="status-text">Naghahanap ng available na drayber...</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="searchProgress"></div>
+        </div>
+        <p class="status-hint" id="searchHint">Tinatayang oras: 10–30 segundo</p>
+      </div>
+
+      <!-- Found / Matched State -->
+      <div id="statusMatched" class="status-content">
+        <div class="status-icon success">✅</div>
+        <h3 class="driver-name" id="driverName">—</h3>
+        <p class="driver-plate" id="driverPlate">—</p>
+        <div class="driver-rating">⭐ <span id="driverRating">—</span></div>
+        
+        <div class="driver-eta">
+          <span class="eta-label">Darating sa:</span>
+          <span class="eta-value" id="etaTime">—</span>
+        </div>
+
+        <div class="matched-fare">
+          <span class="matched-label">Iyong Pamasahe:</span>
+          <span class="matched-price" id="matchedPrice">₱0.00</span>
+        </div>
+
+        <div class="action-buttons">
+          <button id="confirmRide" class="btn btn-primary">✅ Tanggapin</button>
+          <button id="cancelRide" class="btn btn-outline">❌ Kanselahin</button>
+        </div>
+      </div>
+
+      <!-- Confirmed State -->
+      <div id="statusConfirmed" class="status-content">
+        <div class="status-icon success">🚗</div>
+        <h3>Biyahe Nakumpirma!</h3>
+        <p class="status-text">Nakasakay ka na — mag-ingat sa biyahe!</p>
+        <button id="newRide" class="btn btn-secondary">🔄 Magpa-Biyahe Muli</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ==============================================
+FOOTER
+============================================== -->
+<footer class="auth-footer">
+  <p>© 2026 PAHATID SYSTEM — Para sa mga Kababayan Natin<br>
+  <a href="../index.html">Tahanan</a> | 
+  <a href="../driver/login.html">Mag-Drayb</a> | 
+  <a href="../docs/user-guide.html">Gabay</a></p>
+</footer>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="../assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // --- State ---
+  let searchTimer = null;
+  let progressTimer = null;
+  let matchedDriver = null;
+
+  // --- DOM Elements ---
+  const pickup = document.getElementById('pickup');
+  const destination = document.getElementById('destination');
+  const estDistance = document.getElementById('estDistance');
+  const fareRate = document.getElementById('fareRate');
+  const passengers = document.getElementById('passengers');
+  const minusPass = document.getElementById('minusPass');
+  const plusPass = document.getElementById('plusPass');
+  const bookingForm = document.getElementById('bookingForm');
+  const useMyLocation = document.getElementById('useMyLocation');
+
+  // Status Sections
+  const statusIdle = document.getElementById('statusIdle');
+  const statusSearching = document.getElementById('statusSearching');
+  const statusMatched = document.getElementById('statusMatched');
+  const statusConfirmed = document.getElementById('statusConfirmed');
+
+  // --- Helper: Show/Hide Status ---
+  function showStatus(section) {
+    [statusIdle, statusSearching, statusMatched, statusConfirmed].forEach(el => {
+      el.classList.remove('active');
+    });
+    section.classList.add('active');
+  }
+
+  // --- Calculate Fare ---
+  function calculateFare() {
+    const dist = parseFloat(estDistance.value) || 0;
+    const rate = parseFloat(fareRate.value) || 15;
+    const pax = parseInt(passengers.value) || 1;
+    
+    const base = dist * rate;
+    const extraPer = 0.15; // 15% additional per extra passenger
+    const extraFare = pax > 1 ? base * extraPer * (pax - 1) : 0;
+    const total = base + extraFare;
+
+    document.getElementById('baseFare').textContent = PahatidFormat.currency(base);
+    document.getElementById('extraPassFare').textContent = PahatidFormat.currency(extraFare);
+    document.getElementById('totalFare').textContent = PahatidFormat.currency(total);
+    
+    return total;
+  }
+
+  // --- Passenger Controls ---
+  minusPass.addEventListener('click', () => {
+    const val = parseInt(passengers.value);
+    if (val > 1) {
+      passengers.value = val - 1;
+      calculateFare();
+    }
+  });
+  plusPass.addEventListener('click', () => {
+    const val = parseInt(passengers.value);
+    if (val < 3) {
+      passengers.value = val + 1;
+      calculateFare();
+    }
+  });
+
+  // --- Fare Recalc on Input ---
+  [estDistance, fareRate].forEach(el => {
+    el.addEventListener('input', calculateFare);
+  });
+
+  // --- Use Current Location ---
+  useMyLocation.addEventListener('click', function() {
+    if (!navigator.geolocation) {
+      PahatidNotify.error('Hindi suportado ang lokasyon');
+      return;
+    }
+    useMyLocation.disabled = true;
+    useMyLocation.textContent = '...';
+    
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        pickup.value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)} (Kasalukuyang Lokasyon)`;
+        useMyLocation.textContent = '📍';
+        useMyLocation.disabled = false;
+        PahatidNotify.success('Nailagay ang iyong lokasyon ✅');
+      },
+      (err) => {
+        useMyLocation.textContent = '📍';
+        useMyLocation.disabled = false;
+        let msg = 'Hindi makuha ang lokasyon';
+        if (err.code === 1) msg = 'Tinanggihan ang pahintulot sa lokasyon — ilagay nang mano-mano';
+        PahatidNotify.warn(msg);
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  });
+
+  // --- Form Submit — Search for Driver ---
+  bookingForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Clear errors
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    
+    // Validate
+    let valid = true;
+    if (!PahatidValid.text(pickup.value, 200)) {
+      document.getElementById('pickupError').textContent = 'Ilagay ang lugar ng pagkukuunan';
+      valid = false;
+    }
+    if (!PahatidValid.text(destination.value, 200)) {
+      document.getElementById('destError').textContent = 'Ilagay ang pupuntahan';
+      valid = false;
+    }
+    if ((parseFloat(estDistance.value) || 0) <= 0) {
+      PahatidNotify.warn('Ilagay ang tinatayang distansya');
+      valid = false;
+    }
+    if (!valid) return;
+
+    // Start Search Animation
+    showStatus(statusSearching);
+    let progress = 0;
+    const progressFill = document.getElementById('searchProgress');
+    const hints = [
+      'Sinusuri ang mga drayber sa paligid...',
+      'May drayber sa layong 1.2 km...',
+      'Tinitingnan ang oras ng pagdating...',
+      'Tinatanggap ang kahilingan...'
+    ];
+    let hintIndex = 0;
+    document.getElementById('searchHint').textContent = hints[0];
+
+    progressTimer = setInterval(() => {
+      progress += Math.random() * 8 + 3;
+      if (progress > 95) progress = 95;
+      progressFill.style.width = progress + '%';
+      
+      const newHint = Math.floor(progress / 25);
+      if (newHint !== hintIndex && newHint < hints.length) {
+        hintIndex = newHint;
+        document.getElementById('searchHint').textContent = hints[hintIndex];
+      }
+    }, 500);
+
+    // Simulate Driver Found — 3–5 seconds
+    searchTimer = setTimeout(() => {
+      clearInterval(progressTimer);
+      progressFill.style.width = '100%';
+      
+      matchedDriver = {
+        name: ['Juan Dela Cruz', 'Pedro Santos', 'Maria Reyes', 'Josefa Bautista'][Math.floor(Math.random() * 4)],
+        plate: `ABC-${Math.floor(Math.random() * 9000 + 1000)}`,
+        rating: (4.5 + Math.random() * 0.5).toFixed(1),
+        eta: Math.floor(Math.random() * 15 + 5),
+        fare: calculateFare()
+      };
+
+      // Update Matched State
+      document.getElementById('driverName').textContent = matchedDriver.name;
+      document.getElementById('driverPlate').textContent = matchedDriver.plate;
+      document.getElementById('driverRating').textContent = matchedDriver.rating + ' / 5.0';
+      document.getElementById('etaTime').textContent = matchedDriver.eta + ' minuto';
+      document.getElementById('matchedPrice').textContent = PahatidFormat.currency(matchedDriver.fare);
+      
+      setTimeout(() => showStatus(statusMatched), 500);
+    }, 3500 + Math.random() * 2000);
+  });
+
+  // --- Confirm Ride ---
+  document.getElementById('confirmRide').addEventListener('click', function() {
+    if (!matchedDriver) return;
+    showStatus(statusConfirmed);
+    PahatidNotify.success('Biyahe nakumpirma! Salamat sa pagtitiwala ✅');
+  });
+
+  // --- Cancel Ride ---
+  document.getElementById('cancelRide').addEventListener('click', function() {
+    if (searchTimer) clearTimeout(searchTimer);
+    if (progressTimer) clearInterval(progressTimer);
+    matchedDriver = null;
+    showStatus(statusIdle);
+    PahatidNotify.warn('Kinansela ang paghahanap');
+  });
+
+  // --- New Ride ---
+  document.getElementById('newRide').addEventListener('click', function() {
+    matchedDriver = null;
+    bookingForm.reset();
+    passengers.value = 1;
+    estDistance.value = 0;
+    fareRate.value = 15;
+    calculateFare();
+    showStatus(statusIdle);
+  });
+
+  // --- Initial ---
+  calculateFare();
+});
+</script>
+
+<style>
+/* === Commuter Page Specific Styles === */
+.commuter-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  padding-top: 80px;
+}
+
+.commuter-main {
+  flex: 1;
+  padding: var(--space-lg);
+}
+
+.commuter-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: var(--space-xl);
+}
+
+/* Booking Card */
+.booking-card {
+  background: white;
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.booking-title {
+  font-size: 1.75rem;
+  margin-bottom: var(--space-xl);
+  text-align: center;
+  color: var(--color-primary);
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.location-group {
+  position: relative;
+}
+
+.input-with-btn {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.input-with-btn input {
+  flex: 1;
+}
+
+.loc-btn {
+  padding: 0 var(--space-md);
+  background: var(--color-primary-bg);
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.loc-btn:hover {
+  background: var(--color-primary-light);
+  color: white;
+}
+
+.loc-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.passenger-control {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--color-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.pass-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--color-light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-dark);
+}
+
+.pass-btn:hover {
+  background: var(--color-primary-bg);
+}
+
+.passenger-control input {
+  width: 60px;
+  text-align: center;
+  border: none;
+  padding: 0;
+  font-weight: 600;
+}
+
+.fare-summary {
+  background: var(--color-primary-bg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  margin: var(--space-md) 0;
+}
+
+.fare-note {
+  font-size: 0.8rem;
+  color: var(--color-medium);
+  margin-top: var(--space-sm);
+  text-align: center;
+}
+
+/* Status Card */
+.status-card {
+  background: white;
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.status-title {
+  font-size: 1.25rem;
+  margin-bottom: var(--space-lg);
+  text-align: center;
+  color: var(--color-dark);
+}
+
+.status-content {
+  display: none;
+  text-align: center;
+}
+
+.status-content.active {
+  display: block;
+}
+
+.status-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+}
+
+.status-icon.searching {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-icon.success {
+  color: var(--color-success);
+}
+
+.status-text {
+  color: var(--color-medium);
+  margin-bottom: var(--space-lg);
+}
+
+.status-features {
+  text-align: left;
+  margin-top: var(--space-lg);
+}
+
+.feature-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-light);
+  font-size: 0.95rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--color-light);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: var(--space-md) 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  width: 0;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.status-hint {
+  font-size: 0.85rem;
+  color: var(--color-medium);
+}
+
+.driver-name {
+  font-size: 1.3rem;
+  color: var(--color-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.driver-plate {
+  color: var(--color-medium);
+  font-family: monospace;
+  font-size: 1rem;
+  margin-bottom: var(--space-sm);
+}
+
+.driver-rating {
+  margin-bottom: var(--space-lg);
+  font-size: 1.1rem;
+}
+
+.driver-eta {
+  background: var(--color-primary-bg);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.eta-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-medium);
+}
+
+.eta-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.matched-fare {
+  background: #fef3c7;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.matched-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.matched-price {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.action-buttons button {
+  flex: 1;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .commuter-container {
+    grid-template-columns: 1fr;
+  }
+  .status-card {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .commuter-main {
+    padding: var(--space-md);
+  }
+  .booking-card, .status-card {
+    padding: var(--space-lg);
+  }
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+</style>
+</body>
+</html>
+<!-- -----------------------------------------------------------------------------
+END OF FILE: commuter/book.html
+NEXT: Admin Login • History/Dashboard • Documentation — Your choice!
+----------------------------------------------------------------------------- -->
