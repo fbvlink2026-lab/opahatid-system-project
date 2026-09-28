@@ -1,0 +1,477 @@
+<!-- -----------------------------------------------------------------------------
+PAHATID SYSTEM — Habal-Habal Transport Services Platform
+FILE: index.html — HOMEPAGE
+TYPE: Landing Page • Entry Point
+VERSION: 1.0.0
+LAST UPDATED: 2026-09-28
+STATUS: ✅ COMPLETE — Ready for Deployment
+DEPLOYMENT: GitHub Pages Compatible
+-----------------------------------------------------------------------------
+ PURPOSE:
+ Main entry — introduce platform, link to Commuter / Driver / Admin portals
+----------------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAHATID SYSTEM — Habal-Habal Transport</title>
+  <meta name="description" content="Mabilis, tapat, at siguradong pamasahe para sa lahat. Real-time GPS, tamang presyo, at tapat na serbisyo.">
+  
+  <!-- Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://YOUR-USERNAME.github.io/pahatid-system/">
+  <meta property="og:title" content="PAHATID SYSTEM — Habal-Habal Transport">
+  <meta property="og:description" content="Kalkulahin ang presyo bago sumakay. Subaybayan ang kita at gastos. Para sa pasahero at drayber.">
+  <meta property="og:image" content="https://YOUR-USERNAME.github.io/pahatid-system/assets/images/social-preview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#f97316">
+
+  <link rel="icon" href="assets/icons/favicon.ico">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body class="home-body">
+
+<!-- ==============================================
+NAVIGATION
+============================================== -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-brand">
+      <span class="brand-icon">🛵</span>
+      <span class="brand-text">PAHATID</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Tahanan</a></li>
+      <li><a href="commuter/book.html">Pasahero</a></li>
+      <li><a href="driver/login.html">Drayber</a></li>
+      <li><a href="admin/login.html">Admin</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ==============================================
+HERO SECTION
+============================================== -->
+<header class="hero">
+  <div class="hero-container">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Mabilis. Tapat. <br>
+        <span class="text-primary">Siguradong Presyo.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Ang unang bukas na sistema para sa Habal-Habal — <br>
+        Alamin ang presyo bago sumakay, subaybayan ang biyahe, at pamahalaan ang kita.
+      </p>
+      <div class="hero-buttons">
+        <a href="commuter/book.html" class="btn btn-primary btn-lg">
+          🧑‍🤝‍🧑 Magpa-Biyahe
+        </a>
+        <a href="driver/login.html" class="btn btn-secondary btn-lg">
+          🏍️ Para sa Drayber
+        </a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-icon">🛵</div>
+    </div>
+  </div>
+</header>
+
+<!-- ==============================================
+FEATURES
+============================================== -->
+<section class="features-section">
+  <div class="container">
+    <h2 class="section-heading">Bakit PAHATID?</h2>
+    <p class="section-subheading">Lahat ng kailangan mo — sa isang lugar</p>
+
+    <div class="features-grid">
+      <!-- Commuter -->
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>Alamin ang Presyo Agad</h3>
+        <p>Ilagay ang pupuntahan — makikita mo na ang kabuuang pamasahe bago pa sumakay. Walang dagdag, walang sorpresa.</p>
+      </div>
+
+      <!-- Driver -->
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Subaybayan ang Kita</h3>
+        <p>Talaan ang bawat biyahe at gastos sa gasolina. Awtomatikong nakikita ang totoong kinita mo — malinaw at tumpak.</p>
+      </div>
+
+      <!-- GPS -->
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <h3>Real-Time GPS</h3>
+        <p>Tumpak na pagsukat ng distansya gamit ang lokasyon. Ang presyo ay nakabatay sa totoong layo ng biyahe.</p>
+      </div>
+
+      <!-- Fair Rate -->
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <h3>Patas na Pagkalkula</h3>
+        <p>Presyo bawat kilometro + oras ng biyahe — malinaw ang pormula. Pareho ang batayan para sa lahat.</p>
+      </div>
+
+      <!-- Fuel -->
+      <div class="feature-card">
+        <div class="feature-icon">⛽</div>
+        <h3>Gastos sa Gasolina</h3>
+        <p>Ilagay ang presyo ng gasolina at konsumo — makikita mo agad kung magkano ang natitirang kita mo talaga.</p>
+      </div>
+
+      <!-- Admin -->
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Buod ng Sistema</h3>
+        <p>Pamamahala sa mga drayber, talaan ng biyahe, at ulat — lahat ay maayos na nakatala at madaling suriin.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================
+PORTALS
+============================================== -->
+<section class="portals-section">
+  <div class="container">
+    <h2 class="section-heading">Pumili ng Pahina</h2>
+    <p class="section-subheading">Alin ka sa mga sumusunod?</p>
+
+    <div class="portals-grid">
+      <!-- Commuter Portal -->
+      <a href="commuter/book.html" class="portal-card">
+        <div class="portal-icon">🧑‍🤝‍🧑</div>
+        <h3>Pasahero</h3>
+        <p>Maghanap ng sasakyan at alamin ang presyo bago sumakay</p>
+        <span class="portal-link">Pumunta →</span>
+      </a>
+
+      <!-- Driver Portal -->
+      <a href="driver/login.html" class="portal-card">
+        <div class="portal-icon">🏍️</div>
+        <h3>Drayber</h3>
+        <p>Subaybayan ang biyahe, kita, at gastos — lahat sa iyong dashboard</p>
+        <span class="portal-link">Pumunta →</span>
+      </a>
+
+      <!-- Admin Portal -->
+      <a href="admin/login.html" class="portal-card">
+        <div class="portal-icon">🔐</div>
+        <h3>Administrator</h3>
+        <p>Pamahalaan ang mga account, suriin ang talaan, at tingnan ang kabuuan</p>
+        <span class="portal-link">Pumunta →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================
+FOOTER
+============================================== -->
+<footer class="footer">
+  <div class="container footer-content">
+    <div class="footer-brand">
+      <span class="footer-icon">🛵</span>
+      <span class="footer-title">PAHATID SYSTEM</span>
+    </div>
+    
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Mabilis na Pagpunta</h4>
+        <a href="index.html">Tahanan</a>
+        <a href="commuter/book.html">Magpa-Biyahe</a>
+        <a href="driver/login.html">Mag-Drayb</a>
+        <a href="admin/login.html">Admin</a>
+      </div>
+      <div class="footer-col">
+        <h4>Impormasyon</h4>
+        <a href="docs/user-guide.html">Gabay sa Paggamit</a>
+        <a href="#about">Tungkol sa Proyekto</a>
+        <a href="#contact">Makipag-ugnayan</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#privacy">Patakaran sa Pribadong Datos</a>
+        <a href="#terms">Mga Tuntunin</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <p>© 2026 PAHATID SYSTEM — Para sa mga Drayber at Pasahero ng Habal-Habal<br>
+    Lokal na Solusyon • Tapat na Serbisyo • Bukas na Sistema</p>
+  </div>
+</footer>
+
+<!-- ==============================================
+SCRIPTS
+============================================== -->
+<script src="assets/js/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+      
+      const target = document.querySelector(targetId);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+});
+</script>
+
+<style>
+/* === Homepage Specific Styles === */
+.home-body {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+}
+
+/* Hero */
+.hero {
+  padding: var(--space-3xl) var(--space-lg);
+  overflow: hidden;
+}
+
+.hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+.hero-title {
+  font-size: 3rem;
+  line-height: 1.2;
+  margin-bottom: var(--space-lg);
+  color: var(--color-dark);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--color-medium);
+  margin-bottom: var(--space-xl);
+  line-height: 1.6;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-icon {
+  font-size: 10rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+/* Sections */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.section-heading {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: var(--space-sm);
+  color: var(--color-dark);
+}
+
+.section-subheading {
+  text-align: center;
+  color: var(--color-medium);
+  margin-bottom: var(--space-2xl);
+}
+
+/* Features */
+.features-section {
+  padding: var(--space-3xl) 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-xl);
+}
+
+.feature-card {
+  background: white;
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.feature-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: var(--space-sm);
+}
+
+.feature-card p {
+  color: var(--color-medium);
+  line-height: 1.6;
+}
+
+/* Portals */
+.portals-section {
+  padding: var(--space-3xl) 0;
+  background: white;
+}
+
+.portals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-xl);
+}
+
+.portal-card {
+  display: block;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.portal-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.portal-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+}
+
+.portal-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: var(--space-sm);
+  color: var(--color-dark);
+}
+
+.portal-card p {
+  color: var(--color-medium);
+  margin-bottom: var(--space-lg);
+  line-height: 1.5;
+}
+
+.portal-link {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  background: #1f2937;
+  color: white;
+  padding: var(--space-3xl) 0 var(--space-xl);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.footer-icon {
+  font-size: 1.8rem;
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xl);
+}
+
+.footer-col h4 {
+  margin-bottom: var(--space-md);
+  color: #e5e7eb;
+}
+
+.footer-col a {
+  display: block;
+  color: #9ca3af;
+  margin-bottom: var(--space-sm);
+  transition: color 0.2s;
+}
+
+.footer-col a:hover {
+  color: white;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: var(--space-xl);
+  border-top: 1px solid #374151;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .hero-title { font-size: 2rem; }
+  .hero-buttons { justify-content: center; }
+  .hero-icon { font-size: 6rem; }
+  
+  .footer-content { grid-template-columns: 1fr; }
+  .footer-links { grid-template-columns: 1fr; gap: var(--space-lg); }
+}
+</style>
+</body>
+</html>
