@@ -1,334 +1,186 @@
-// -----------------------------------------------------------------------------
-// PAHATID SYSTEM — Habal-Habal Transport Services Platform
-// FILE: common.js
-// TYPE: Shared Core JavaScript
-// VERSION: 1.2.0
-// LAST UPDATED: 2026-09-28
-// STATUS: Active — Ready for Implementation
-// DEPLOYMENT: GitHub Pages Compatible — Vanilla JS Only
-// SECURITY: No credentials exposed | Input-safe utilities included
-// ENHANCEMENTS: Added Collapsible Sidebar / Side Menu System
-// -----------------------------------------------------------------------------
-//  PURPOSE:
-//  Reusable functions & initializers — navigation, sidebar, scroll, validation,
-//  formatters, storage, auth, feedback, and shared helpers across all portals
-// -----------------------------------------------------------------------------
+/* --------------------------------------------------------------------------
+   PAHATID SYSTEM — Common Utilities
+   Version: 1.0 | Last Updated: 2026-09-29
+   Shared across ALL pages — Auth, Storage, Formatting, Validation, Notifications
+-------------------------------------------------------------------------- */
 
-// =============================================
-// TABLE OF CONTENTS
-//  1. DOM Ready Initialization
-//  2. Top Mobile Navigation Toggle
-//  3. Sidebar / Side Menu System — NEW ✅
-//  4. Smooth Scroll & Active Link
-//  5. Formatters
-//  6. Validation & Sanitization
-//  7. Local Storage Helpers
-//  8. Session & Auth Helpers
-//  9. Feedback & Rating Rendering
-//  10. Notifications
-//  11. Debounce & Performance
-// =============================================
+// ========== STORAGE HELPER ==========
+const PahatidStore = {
+  get(key, defaultValue = null) {
+    try {
+      const item = localStorage.getItem(`pahatid_${key}`);
+      return item ? JSON.parse(item) : defaultValue;
+    } catch { return defaultValue; }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(`pahatid_${key}`, JSON.stringify(value));
+      return true;
+    } catch { return false; }
+  },
+  remove(key) {
+    localStorage.removeItem(`pahatid_${key}`);
+  },
+  clearAll() {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('pahatid_'))
+      .forEach(k => localStorage.removeItem(k));
+  }
+};
 
-(function () {
-  'use strict';
+// ========== AUTHENTICATION ==========
+const PahatidAuth = {
+  isLoggedIn() {
+    return !!PahatidStore.get('user_role');
+  },
+  getRole() {
+    return PahatidStore.get('user_role');
+  },
+  getId() {
+    return PahatidStore.get('user_id', '');
+  },
+  logout(redirectTo = '../index.html') {
+    PahatidStore.clearAll();
+    window.location.href = redirectTo;
+  },
+  requireRole(allowedRoles) {
+    const role = this.getRole();
+    if (!role || !allowedRoles.includes(role)) {
+      this.logout();
+      return false;
+    }
+    return true;
+  }
+};
 
-  // =============================================
-  // 1. INITIALIZE ON DOM READY
-  // =============================================
-  document.addEventListener('DOMContentLoaded', initCommon, false);
+// ========== FORMATING ==========
+const PahatidFormat = {
+  currency(amount) {
+    return new Intl.NumberFormat('fil-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  },
+  dateShort(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    return d.toLocaleDateString('fil-PH', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  },
+  number(num, decimals = 2) {
+    return Number(num || 0).toFixed(decimals);
+  }
+};
 
-  function initCommon() {
-    initTopNavigation();
-    initSidebar(); // ✅ Sidebar init
-    initSmoothScroll();
-    setActiveNavLink();
-    observeScrollNavbar();
-    console.log('%c🛵 PAHATID SYSTEM — Loaded v1.2', 'color: #2563eb; font-weight: bold; font-size: 14px;');
+// ========== VALIDATION ==========
+const PahatidValid = {
+  text(value, maxLen = 255, minLen = 1) {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    return trimmed.length >= minLen && trimmed.length <= maxLen;
+  },
+  number(value, min = null, max = null) {
+    const num = parseFloat(value);
+    if (isNaN(num)) return false;
+    if (min !== null && num < min) return false;
+    if (max !== null && num > max) return false;
+    return true;
+  }
+};
+
+// ========== NOTIFICATIONS ==========
+const PahatidNotify = {
+  show(message, type = 'info', duration = 3000) {
+    const existing = document.querySelector('.pahatid-notification');
+    if (existing) existing.remove();
+
+    const colors = {
+      success: '#10b981',
+      error: '#ef4444',
+      warn: '#f59e0b',
+      info: '#3b82f6'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = 'pahatid-notification';
+    toast.style.cssText = `
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      background: ${colors[type]}; color: white; padding: 12px 24px;
+      border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-weight: 500; max-width: 320px;
+      animation: slideIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  },
+  success(m) { this.show(m, 'success'); },
+  error(m) { this.show(m, 'error'); },
+  warn(m) { this.show(m, 'warn'); },
+  info(m) { this.show(m, 'info'); }
+};
+
+// ========== GLOBAL NAV SETUP ==========
+document.addEventListener('DOMContentLoaded', () => {
+  // Mobile Nav Toggle
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+    });
   }
 
-  // =============================================
-  // 2. TOP NAVIGATION (existing mobile menu)
-  // =============================================
-  function initTopNavigation() {
-    const toggle = document.getElementById('navToggle');
-    const links = document.getElementById('navLinks');
-    if (!toggle || !links) return;
+  // Sidebar Toggle
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  
+  const toggleSidebar = (open) => {
+    if (!sidebar) return;
+    sidebar.classList.toggle('expanded', open);
+    if (sidebarOverlay) sidebarOverlay.style.display = open ? 'block' : 'none';
+  };
 
-    toggle.addEventListener('click', () => {
-      links.classList.toggle('active');
-      toggle.setAttribute('aria-expanded', links.classList.contains('active'));
-    });
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => toggleSidebar(!sidebar.classList.contains('expanded')));
+  }
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+  }
 
-    links.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        if (window.innerWidth < 768) links.classList.remove('active');
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!toggle.contains(e.target) && !links.contains(e.target)) {
-        links.classList.remove('active');
-        toggle.setAttribute('aria-expanded', 'false');
+  // Sidebar Links — Active State
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        toggleSidebar(false);
       }
     });
+  });
+});
+
+// ========== GLOBAL ANIMATIONS ==========
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
-
-  // =============================================
-  // 3. SIDEBAR / SIDE MENU — ✅ NEW
-  // =============================================
-  const SIDEBAR_COLLAPSED_WIDTH = '64px';
-  const SIDEBAR_EXPANDED_WIDTH = '260px';
-
-  function initSidebar() {
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const mainContent = document.getElementById('mainContent');
-
-    if (!sidebar) return; // Skip if no sidebar on page
-
-    // Restore saved state
-    const savedState = localStorage.getItem('pahatid_sidebar_state');
-    const isMobile = window.innerWidth < 768;
-    
-    if (!isMobile && savedState === 'expanded') {
-      sidebar.classList.add('expanded');
-      applySidebarState(true);
-    }
-
-    // Toggle button
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        const willExpand = !sidebar.classList.contains('expanded');
-        sidebar.classList.toggle('expanded');
-        applySidebarState(willExpand);
-        
-        // Save state only on desktop
-        if (window.innerWidth >= 768) {
-          localStorage.setItem('pahatid_sidebar_state', willExpand ? 'expanded' : 'collapsed');
-        }
-      });
-    }
-
-    // Mobile overlay close
-    if (overlay) {
-      overlay.addEventListener('click', () => closeSidebar(sidebar, overlay, mainContent));
-    }
-
-    // Sidebar links — close on mobile after click
-    sidebar.querySelectorAll('.sidebar-link').forEach(link => {
-      link.addEventListener('click', () => {
-        if (window.innerWidth < 768) {
-          closeSidebar(sidebar, overlay, mainContent);
-        }
-      });
-    });
-
-    // Handle resize
-    window.addEventListener('resize', PahatidUtil.debounce(() => {
-      if (window.innerWidth < 768) {
-        sidebar.classList.remove('expanded');
-        applySidebarState(false);
-      }
-    }, 200));
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
   }
+`;
+document.head.appendChild(style);
 
-  function applySidebarState(isExpanded) {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const overlay = document.getElementById('sidebarOverlay');
-    if (!sidebar) return;
-
-    if (isExpanded) {
-      sidebar.style.width = SIDEBAR_EXPANDED_WIDTH;
-      if (mainContent) mainContent.style.marginLeft = SIDEBAR_EXPANDED_WIDTH;
-      if (overlay && window.innerWidth < 768) overlay.style.opacity = '1';
-      if (overlay && window.innerWidth < 768) overlay.style.pointerEvents = 'auto';
-    } else {
-      sidebar.style.width = SIDEBAR_COLLAPSED_WIDTH;
-      if (mainContent) mainContent.style.marginLeft = SIDEBAR_COLLAPSED_WIDTH;
-      if (overlay) overlay.style.opacity = '0';
-      if (overlay) overlay.style.pointerEvents = 'none';
-    }
-  }
-
-  function closeSidebar(sidebar, overlay, mainContent) {
-    if (!sidebar) return;
-    sidebar.classList.remove('expanded');
-    applySidebarState(false);
-  }
-
-  // =============================================
-  // 4. SMOOTH SCROLL & ACTIVE LINK
-  // =============================================
-  function initSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        const targetEl = document.querySelector(targetId);
-        if (!targetEl) return;
-        e.preventDefault();
-        const navHeight = document.querySelector('.navbar')?.offsetHeight || 80;
-        const sidebar = document.getElementById('sidebar');
-        const offset = sidebar && window.innerWidth >= 768 ? 20 : navHeight + 20;
-        window.scrollTo({
-          top: targetEl.offsetTop - offset,
-          behavior: 'smooth'
-        });
-      });
-    });
-  }
-
-  function setActiveNavLink() {
-    const sections = document.querySelectorAll('section[id]');
-    if (!sections.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          // Top nav
-          document.querySelectorAll('.nav-links a[href^="#"]').forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${entry.target.id}`) {
-              link.classList.add('active');
-            }
-          });
-          // Sidebar
-          document.querySelectorAll('.sidebar-link[href^="#"]').forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${entry.target.id}`) {
-              link.classList.add('active');
-            }
-          });
-        }
-      });
-    }, { threshold: 0.3, rootMargin: '-80px 0px 0px 0px' });
-
-    sections.forEach(section => observer.observe(section));
-  }
-
-  function observeScrollNavbar() {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar) return;
-    window.addEventListener('scroll', () => {
-      navbar.style.boxShadow = window.scrollY > 50
-        ? '0 2px 10px rgba(0,0,0,0.1)'
-        : '0 1px 2px rgba(0,0,0,0.05)';
-    }, { passive: true });
-  }
-
-  // =============================================
-  // 5. FORMATTERS — Consistent Display Across Site
-  // =============================================
-  window.PahatidFormat = {
-    currency: function (amount, decimals = 2) {
-      const num = parseFloat(amount) || 0;
-      return new Intl.NumberFormat('ph-PH', {
-        style: 'currency', currency: 'PHP', minimumFractionDigits: decimals
-      }).format(num);
-    },
-    distance: km => `${(parseFloat(km) || 0).toFixed(2)} km`,
-    time: d => d ? new Date(d).toLocaleString('ph-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '',
-    dateShort: d => d ? new Date(d).toLocaleDateString('ph-PH') : '',
-    ratingStars: function (value, max = 5) {
-      const num = Math.max(0, Math.min(max, parseFloat(value) || 0));
-      return '⭐'.repeat(Math.floor(num)) + (num % 1 >= 0.25 ? '½' : '') + '☆'.repeat(Math.ceil(max - num));
-    },
-    maskCard: (lastFour, net) => net ? `${net} •••• ${lastFour}` : `•••• ${lastFour}`
-  };
-
-  // =============================================
-  // 6. VALIDATION & SANITIZATION
-  // =============================================
-  window.PahatidValid = {
-    text: (s, max = 255) => typeof s === 'string' && s.trim().length > 0 && s.trim().length <= max,
-    phone: n => typeof n === 'string' && /^(09|\+639)\d{9}$/.test(n.replace(/\D/g, '')),
-    email: a => typeof a === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a),
-    coords: (lat, lng) => isFinite(lat) && Math.abs(lat) <= 90 && isFinite(lng) && Math.abs(lng) <= 180,
-    fare: v => !isNaN(parseFloat(v)) && parseFloat(v) >= 0 && parseFloat(v) <= 99999,
-    sanitizeHTML: str => { const t = document.createElement('div'); t.textContent = str; return t.innerHTML; },
-    escape: function(s) { return this.sanitizeHTML(s); }
-  };
-
-  // =============================================
-  // 7. LOCAL STORAGE
-  // =============================================
-  const PREFIX = 'pahatid_';
-  const ALLOWED_KEYS = ['user_role', 'user_id', 'theme', 'lang', 'last_ride', 'sidebar_state'];
-  window.PahatidStore = {
-    set: (k, v) => ALLOWED_KEYS.includes(k) && (localStorage.setItem(PREFIX + k, JSON.stringify(v)), true),
-    get: (k, def = null) => ALLOWED_KEYS.includes(k) ? JSON.parse(localStorage.getItem(PREFIX + k)) ?? def : def,
-    remove: k => localStorage.removeItem(PREFIX + k),
-    clearAll: () => ALLOWED_KEYS.forEach(k => localStorage.removeItem(PREFIX + k))
-  };
-
-  // =============================================
-  // 8. AUTH HELPERS
-  // =============================================
-  window.PahatidAuth = {
-    getRole: () => PahatidStore.get('user_role'),
-    getUserId: () => PahatidStore.get('user_id'),
-    isLoggedIn: function() { return !!this.getRole() && !!this.getUserId(); },
-    requireRole: function(roles, redir) {
-      const ok = roles.includes(this.getRole());
-      !ok && redir && (window.location.href = redir);
-      return ok;
-    },
-    logout: (redir = '/index.html') => (PahatidStore.clearAll(), window.location.href = redir)
-  };
-
-  // =============================================
-  // 9. FEEDBACK RENDERING
-  // =============================================
-  window.PahatidUI = {
-    renderFeedbackCards: function(id, arr) {
-      const c = document.getElementById(id);
-      if (!c || !Array.isArray(arr)) return;
-      c.innerHTML = '';
-      arr.forEach(fb => {
-        c.innerHTML += `
-          <div class="feedback-card">
-            <div class="feedback-header">
-              <span class="feedback-author">${PahatidValid.sanitizeHTML(fb.author || 'Gumagamit')}</span>
-              <span class="feedback-rating">${PahatidFormat.ratingStars(fb.rating)}</span>
-            </div>
-            <p class="feedback-text">${PahatidValid.sanitizeHTML(fb.text)}</p>
-            <span class="feedback-date">${fb.date ? PahatidFormat.dateShort(fb.date) : ''} • ${fb.type || ''}</span>
-          </div>`;
-      });
-    }
-  };
-
-  // =============================================
-  // 10. NOTIFICATIONS
-  // =============================================
-  window.PahatidNotify = {
-    show: function(msg, type = 'info', dur = 4000) {
-      const colors = { success:'#10b981', error:'#ef4444', warning:'#f59e0b', info:'#2563eb' };
-      const box = Object.assign(document.createElement('div'), {
-        style: `position:fixed;top:90px;right:20px;z-index:9999;background:${colors[type]};color:#fff;padding:1rem 1.5rem;border-radius:0.5rem;box-shadow:0 10px 25px rgba(0,0,0,0.2);max-width:320px;`
-      });
-      box.textContent = msg;
-      document.body.appendChild(box);
-      setTimeout(() => { box.style.opacity = '0'; setTimeout(() => box.remove(), 300); }, dur);
-    },
-    success: m => this.show(m, 'success'),
-    error: m => this.show(m, 'error'),
-    warn: m => this.show(m, 'warning')
-  };
-
-  // =============================================
-  // 11. DEBOUNCE & HELPERS
-  // =============================================
-  window.PahatidUtil = {
-    debounce: function(fn, ms = 300) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; },
-    getQueryParam: n => new URLSearchParams(window.location.search).get(n)
-  };
-
-})();
-
-// -----------------------------------------------------------------------------
-// END OF FILE: common.js
-// REQUIRED CSS UPDATES IN main.css BELOW 👇
-// -----------------------------------------------------------------------------
+console.log('%c PAHATID SYSTEM ', 'background:#f97316; color:white; padding:4px 8px; border-radius:4px; font-weight:bold;');
+console.log('Habal-Habal Transport Platform — Ready ✅');
