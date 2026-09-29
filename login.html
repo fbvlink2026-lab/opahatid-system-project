@@ -1,10 +1,10 @@
 <!-- =========================================
 Project: Pahatid System Project
 File: login.html
-Description: Unified Authentication Interface (Login/Register) with Role-Based Redirects
+Description: Unified Authentication Interface with Enhanced Debugging
 Author: AI Assistant
 Date: 2026-09-29
-Version: 2.0.0 (Path A - Serverless)
+Version: 2.0.2 (Debug Mode Enabled)
 ========================================= -->
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +24,6 @@ Version: 2.0.0 (Path A - Serverless)
     <link rel="stylesheet" href="assets/css/style.css">
     
     <style>
-        /* Inline styles specific to this page for quick rendering */
         body {
             background-color: #f8f9fa;
             display: flex;
@@ -61,6 +60,21 @@ Version: 2.0.0 (Path A - Serverless)
             border-color: #0d6efd !important;
         }
         .hidden { display: none !important; }
+        
+        /* DEBUG BOX STYLE */
+        #debugBox {
+            background: #212529;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +99,7 @@ Version: 2.0.0 (Path A - Serverless)
                     
                     <div class="card-body p-4">
                         
-                        <!-- Tab Navigation (Login vs Register) -->
+                        <!-- Tab Navigation -->
                         <ul class="nav nav-pills nav-fill mb-4" id="authTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">Login</button>
@@ -111,17 +125,12 @@ Version: 2.0.0 (Path A - Serverless)
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-primary fw-bold py-2">Sign In</button>
                                     </div>
-                                    <div class="text-center mt-3">
-                                        <small><a href="#" class="text-decoration-none">Forgot Password?</a></small>
-                                    </div>
                                 </form>
                             </div>
 
                             <!-- REGISTER FORM -->
                             <div class="tab-pane fade" id="register-pane" role="tabpanel" aria-labelledby="register-tab">
                                 <form id="registerForm">
-                                    
-                                    <!-- Role Selection -->
                                     <div class="mb-3">
                                         <label class="form-label d-block">I am a:</label>
                                         <div class="role-selector">
@@ -130,10 +139,6 @@ Version: 2.0.0 (Path A - Serverless)
                                             </button>
                                             <button type="button" class="btn btn-outline-secondary role-btn" data-role="driver">
                                                 <i class="fas fa-motorcycle d-block mb-1"></i> Driver
-                                            </button>
-                                            <!-- Admin registration usually disabled publicly, but kept for demo/testing -->
-                                            <button type="button" class="btn btn-outline-secondary role-btn" data-role="admin" style="display:none;"> 
-                                                <i class="fas fa-shield-alt d-block mb-1"></i> Admin
                                             </button>
                                         </div>
                                         <input type="hidden" id="regRole" value="commuter">
@@ -183,6 +188,12 @@ Version: 2.0.0 (Path A - Serverless)
                 <!-- Error/Success Message Container -->
                 <div id="authMessage" class="mt-3 text-center"></div>
 
+                <!-- DEBUG OUTPUT BOX -->
+                <div id="debugBox" class="hidden">
+                    <strong>DEBUG LOG:</strong><br>
+                    <span id="debugContent"></span>
+                </div>
+
             </div>
         </div>
     </div>
@@ -193,6 +204,31 @@ Version: 2.0.0 (Path A - Serverless)
     <script type="module">
         import { supabase } from './assets/js/config.js';
 
+        // --- DEBUGGING HELPER ---
+        function logDebug(message, data = null) {
+            const box = document.getElementById('debugBox');
+            const content = document.getElementById('debugContent');
+            
+            // Show box if hidden
+            box.classList.remove('hidden');
+            
+            let timestamp = new Date().toLocaleTimeString();
+            let logEntry = `[${timestamp}] ${message}\n`;
+            
+            if (data) {
+                try {
+                    logEntry += JSON.stringify(data, null, 2) + "\n";
+                } catch (e) {
+                    logEntry += String(data) + "\n";
+                }
+            }
+            
+            content.textContent += logEntry;
+            box.scrollTop = box.scrollHeight; // Auto-scroll to bottom
+            
+            console.log(logEntry); // Also print to browser console
+        }
+
         // DOM Elements
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
@@ -202,20 +238,13 @@ Version: 2.0.0 (Path A - Serverless)
         const driverFields = document.getElementById('driverFields');
 
         // --- UI LOGIC ---
-
-        // Handle Role Selection Toggle
         roleButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Remove active class from all
                 roleButtons.forEach(b => b.classList.remove('active'));
-                // Add to clicked
                 btn.classList.add('active');
-                
-                // Update hidden input
                 const selectedRole = btn.getAttribute('data-role');
                 regRoleInput.value = selectedRole;
 
-                // Show/Hide Driver Specific Fields
                 if (selectedRole === 'driver') {
                     driverFields.classList.remove('hidden');
                 } else {
@@ -224,48 +253,74 @@ Version: 2.0.0 (Path A - Serverless)
             });
         });
 
-        // Helper to show messages
         function showMessage(msg, type = 'danger') {
             authMessage.innerHTML = `<div class="alert alert-${type} py-2 px-3 small">${msg}</div>`;
             setTimeout(() => { authMessage.innerHTML = ''; }, 5000);
         }
 
-        // --- AUTHENTICATION LOGIC ---
+        // --- AUTHENTICATION LOGIC WITH DEBUGGING ---
 
         // 1. LOGIN HANDLER
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            logDebug("--- STARTING LOGIN ATTEMPT ---");
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
             try {
+                logDebug(`Attempting signInWithPassword for: ${email}`);
+                
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
 
-                if (error) throw error;
+                if (error) {
+                    logDebug("❌ SIGN IN ERROR", error);
+                    throw error;
+                }
 
-                showMessage('Login successful! Redirecting...', 'success');
+                logDebug("✅ SIGN IN SUCCESSFUL", { userId: data.user.id, sessionId: !!data.session });
+                showMessage('Login successful! Checking profile...', 'success');
                 
-                // Fetch Profile to determine redirect destination
+                // STEP 2: FETCH PROFILE
+                logDebug("Fetching profile from 'profiles' table...");
+                
                 const { data: profile, error: profileErr } = await supabase
                     .from('profiles')
-                    .select('role, status')
+                    .select('*') // Select ALL fields to see what exists
                     .eq('id', data.user.id)
-                    .single();
+                    .single(); // Expect exactly one row
 
-                if (profileErr || !profile) {
-                    throw new Error('Profile not found.');
+                if (profileErr) {
+                    logDebug("❌ PROFILE QUERY ERROR", profileErr);
+                    // Common errors: 
+                    // - PGRST116: no rows returned (ID mismatch or missing record)
+                    // - Permission denied (RLS issue)
+                    throw new Error(`Database Error: ${profileErr.message}. Code: ${profileErr.code}`);
                 }
 
+                if (!profile) {
+                    logDebug("❌ NO PROFILE FOUND (Null result)", { searchedId: data.user.id });
+                    throw new Error("Profile record does not exist in database.");
+                }
+
+                logDebug("✅ PROFILE FOUND", { 
+                    id: profile.id, 
+                    role: profile.role, 
+                    status: profile.status 
+                });
+
+                // STEP 3: VALIDATE STATUS & REDIRECT
                 if (profile.status !== 'active') {
+                    logDebug(`⚠️ ACCOUNT NOT ACTIVE. Status: ${profile.status}`);
                     await supabase.auth.signOut();
-                    throw new Error(`Account status: ${profile.status}. Please contact support.`);
+                    throw new Error(`Account status is '${profile.status}'. Please contact admin.`);
                 }
 
-                // Redirect based on role
+                logDebug(`🚀 Redirecting to dashboard for role: ${profile.role}`);
+                
                 if (profile.role === 'admin' || profile.role === 'dispatcher') {
                     window.location.href = '/admin/dashboard.html';
                 } else if (profile.role === 'driver') {
@@ -275,7 +330,7 @@ Version: 2.0.0 (Path A - Serverless)
                 }
 
             } catch (err) {
-                console.error(err);
+                logDebug(`💥 FINAL ERROR CAUGHT: ${err.message}`);
                 showMessage(err.message || 'Invalid credentials.', 'danger');
             }
         });
@@ -283,6 +338,7 @@ Version: 2.0.0 (Path A - Serverless)
         // 2. REGISTER HANDLER
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            logDebug("--- STARTING REGISTRATION ---");
 
             const fullName = document.getElementById('regFullName').value;
             const phone = document.getElementById('regPhone').value;
@@ -290,20 +346,9 @@ Version: 2.0.0 (Path A - Serverless)
             const password = document.getElementById('regPassword').value;
             const role = regRoleInput.value;
 
-            // Validation for Driver fields if applicable
-            let license = null;
-            let plate = null;
-            if (role === 'driver') {
-                license = document.getElementById('regLicense').value;
-                plate = document.getElementById('regPlate').value;
-                if (!license || !plate) {
-                    showMessage('License and Plate number are required for drivers.', 'warning');
-                    return;
-                }
-            }
-
             try {
-                // Step A: Create User in Supabase Auth
+                logDebug(`Signing up user: ${email} with role: ${role}`);
+                
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -316,45 +361,38 @@ Version: 2.0.0 (Path A - Serverless)
                     }
                 });
 
-                if (error) throw error;
+                if (error) {
+                    logDebug("❌ SIGN UP ERROR", error);
+                    throw error;
+                }
 
+                logDebug("✅ SIGN UP SUCCESSFUL", { userId: data.user?.id });
+                
                 if (data.user && data.session) {
-                    // Auto-login occurred (depending on Supabase settings), proceed to redirect logic above
-                    showMessage('Registration successful!', 'success');
+                    showMessage('Registration successful! Logging you in...', 'success');
                     
-                    // We need to manually insert into 'drivers' table if role is driver, 
-                    // because the trigger only inserts into 'profiles'.
-                    if (role === 'driver') {
-                         const { error: driverErr } = await supabase.from('drivers').insert([
-                             {
-                                 user_profile_id: data.user.id,
-                                 license_number: license,
-                                 vehicle_plate_number: plate,
-                                 current_rank: 'newbie'
-                             }
-                         ]);
-                         if(driverErr) console.warn("Could not create driver record immediately:", driverErr);
-                    }
-
-                    // Small delay to allow DB triggers to fire
+                    // Wait briefly for trigger to fire if enabled
                     setTimeout(async () => {
-                       const { data: sessionData } = await supabase.auth.getSession();
-                       if(sessionData.session) {
-                           const { data: profile } = await supabase.from('profiles').select('*').eq('id', sessionData.session.user.id).single();
-                           
-                           if(profile.role === 'admin') window.location.href = '/admin/dashboard.html';
-                           else if(profile.role === 'driver') window.location.href = '/driver/dashboard.html';
-                           else window.location.href = '/commuter/dashboard.html';
+                       logDebug("Checking if profile was auto-created by trigger...");
+                       const { data: checkProfile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+                       
+                       if(checkProfile) {
+                           logDebug("✅ Trigger worked! Profile exists.", checkProfile);
+                           // Proceed to login logic manually or redirect
+                           window.location.reload(); 
+                       } else {
+                           logDebug("⚠️ Trigger FAILED or delayed. Profile missing.", { expectedId: data.user.id });
+                           alert("Registered, but profile creation failed. Please contact Admin or try logging in after refreshing.");
                        }
-                    }, 1000);
+                    }, 2000);
 
                 } else {
-                    // Email confirmation required mode
+                    logDebug("ℹ️ Email confirmation required mode.");
                     showMessage('Check your email to confirm your account.', 'info');
                 }
 
             } catch (err) {
-                console.error(err);
+                logDebug(`💥 REGISTRATION ERROR: ${err.message}`);
                 showMessage(err.message || 'Registration failed.', 'danger');
             }
         });
