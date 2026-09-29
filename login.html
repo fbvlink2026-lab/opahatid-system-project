@@ -1,10 +1,10 @@
 <!-- =========================================
 Project: Pahatid System Project
 File: login.html
-Description: Unified Authentication Interface with Enhanced Debugging
+Description: Unified Authentication Interface with Advanced Debugging & Role Logic
 Author: AI Assistant
 Date: 2026-09-29
-Version: 2.0.2 (Debug Mode Enabled)
+Version: 2.1.0 (Production Ready + Dev Tools)
 ========================================= -->
 <!DOCTYPE html>
 <html lang="en">
@@ -32,7 +32,7 @@ Version: 2.0.2 (Debug Mode Enabled)
             min-height: 100vh;
         }
         .auth-card {
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
             border-radius: 1rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -61,12 +61,12 @@ Version: 2.0.2 (Debug Mode Enabled)
         }
         .hidden { display: none !important; }
         
-        /* DEBUG BOX STYLE */
+        /* DEBUG BOX STYLE - Hidden by default unless ?debug=true */
         #debugBox {
             background: #212529;
             color: #00ff00;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             padding: 10px;
             margin-top: 15px;
             border-radius: 5px;
@@ -74,6 +74,7 @@ Version: 2.0.2 (Debug Mode Enabled)
             overflow-y: auto;
             text-align: left;
             white-space: pre-wrap;
+            border: 1px solid #444;
         }
     </style>
 </head>
@@ -115,15 +116,23 @@ Version: 2.0.2 (Debug Mode Enabled)
                             <div class="tab-pane fade show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab">
                                 <form id="loginForm">
                                     <div class="mb-3">
-                                        <label for="loginEmail" class="form-label">Email Address</label>
+                                        <label for="loginEmail" class="form-label fw-bold">Email Address</label>
                                         <input type="email" class="form-control" id="loginEmail" required placeholder="name@example.com">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="loginPassword" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
+                                        <label for="loginPassword" class="form-label fw-bold">Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePass('loginPassword', this)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary fw-bold py-2">Sign In</button>
+                                        <button type="submit" class="btn btn-primary fw-bold py-2" id="btnLogin">Sign In</button>
+                                    </div>
+                                    <div class="text-center mt-3">
+                                        <a href="#" class="text-muted small text-decoration-none">Forgot Password?</a>
                                     </div>
                                 </form>
                             </div>
@@ -132,7 +141,7 @@ Version: 2.0.2 (Debug Mode Enabled)
                             <div class="tab-pane fade" id="register-pane" role="tabpanel" aria-labelledby="register-tab">
                                 <form id="registerForm">
                                     <div class="mb-3">
-                                        <label class="form-label d-block">I am a:</label>
+                                        <label class="form-label d-block fw-bold">I am registering as:</label>
                                         <div class="role-selector">
                                             <button type="button" class="btn btn-outline-secondary role-btn active" data-role="commuter">
                                                 <i class="fas fa-user-friends d-block mb-1"></i> Commuter
@@ -140,44 +149,51 @@ Version: 2.0.2 (Debug Mode Enabled)
                                             <button type="button" class="btn btn-outline-secondary role-btn" data-role="driver">
                                                 <i class="fas fa-motorcycle d-block mb-1"></i> Driver
                                             </button>
+                                            <!-- NOTE: Admin role removed from public selection for security -->
                                         </div>
                                         <input type="hidden" id="regRole" value="commuter">
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="regFullName" class="form-label">Full Name</label>
+                                        <label for="regFullName" class="form-label fw-bold">Full Name</label>
                                         <input type="text" class="form-control" id="regFullName" required placeholder="Juan Dela Cruz">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="regPhone" class="form-label">Mobile Number</label>
+                                        <label for="regPhone" class="form-label fw-bold">Mobile Number</label>
                                         <input type="tel" class="form-control" id="regPhone" required placeholder="+63 9XX XXX XXXX">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="regEmail" class="form-label">Email Address</label>
+                                        <label for="regEmail" class="form-label fw-bold">Email Address</label>
                                         <input type="email" class="form-control" id="regEmail" required placeholder="name@example.com">
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="regPassword" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="regPassword" required minlength="8" placeholder="Min 8 characters">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-6">
+                                            <label for="regPassword" class="form-label fw-bold">Password</label>
+                                            <input type="password" class="form-control" id="regPassword" required minlength="8" placeholder="Min 8 chars">
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="regConfirmPassword" class="form-label fw-bold">Confirm</label>
+                                            <input type="password" class="form-control" id="regConfirmPassword" required placeholder="Repeat password">
+                                        </div>
                                     </div>
                                     
                                     <!-- Extra Fields for Drivers -->
-                                    <div id="driverFields" class="hidden">
-                                        <div class="alert alert-info small py-2 mb-3">
-                                            <i class="fas fa-info-circle me-1"></i> Driver accounts require approval by an Admin before activation.
+                                    <div id="driverFields" class="hidden bg-light p-3 rounded mb-3 border">
+                                        <div class="alert alert-info small py-2 mb-3 border-0">
+                                            <i class="fas fa-info-circle me-1"></i> Driver accounts require Admin approval. Please provide valid details.
                                         </div>
                                         <div class="mb-3">
-                                            <label for="regLicense" class="form-label">Driver's License No.</label>
-                                            <input type="text" class="form-control" id="regLicense" placeholder="e.g., ABC-123456">
+                                            <label for="regLicense" class="form-label small fw-bold">Driver's License No.</label>
+                                            <input type="text" class="form-control form-control-sm" id="regLicense" placeholder="e.g., ABC-123456">
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="regPlate" class="form-label">Vehicle Plate Number</label>
-                                            <input type="text" class="form-control" id="regPlate" placeholder="e.g., XYZ 1234">
+                                        <div class="mb-0">
+                                            <label for="regPlate" class="form-label small fw-bold">Vehicle Plate Number</label>
+                                            <input type="text" class="form-control form-control-sm" id="regPlate" placeholder="e.g., XYZ 1234">
                                         </div>
                                     </div>
 
                                     <div class="d-grid">
-                                        <button type="submit" class="btn btn-success fw-bold py-2">Create Account</button>
+                                        <button type="submit" class="btn btn-success fw-bold py-2" id="btnRegister">Create Account</button>
                                     </div>
                                 </form>
                             </div>
@@ -188,9 +204,9 @@ Version: 2.0.2 (Debug Mode Enabled)
                 <!-- Error/Success Message Container -->
                 <div id="authMessage" class="mt-3 text-center"></div>
 
-                <!-- DEBUG OUTPUT BOX -->
+                <!-- DEBUG OUTPUT BOX (Hidden unless ?debug=true) -->
                 <div id="debugBox" class="hidden">
-                    <strong>DEBUG LOG:</strong><br>
+                    <strong>SYSTEM DEBUG LOG:</strong><br>
                     <span id="debugContent"></span>
                 </div>
 
@@ -204,12 +220,16 @@ Version: 2.0.2 (Debug Mode Enabled)
     <script type="module">
         import { supabase } from './assets/js/config.js';
 
+        // --- CONFIGURATION ---
+        const IS_DEBUG = new URLSearchParams(window.location.search).get('debug') === 'true';
+        
         // --- DEBUGGING HELPER ---
         function logDebug(message, data = null) {
+            if (!IS_DEBUG) return; // Skip logging if not in debug mode
+            
             const box = document.getElementById('debugBox');
             const content = document.getElementById('debugContent');
             
-            // Show box if hidden
             box.classList.remove('hidden');
             
             let timestamp = new Date().toLocaleTimeString();
@@ -224,9 +244,8 @@ Version: 2.0.2 (Debug Mode Enabled)
             }
             
             content.textContent += logEntry;
-            box.scrollTop = box.scrollHeight; // Auto-scroll to bottom
-            
-            console.log(logEntry); // Also print to browser console
+            box.scrollTop = box.scrollHeight;
+            console.log(logEntry);
         }
 
         // DOM Elements
@@ -236,6 +255,19 @@ Version: 2.0.2 (Debug Mode Enabled)
         const roleButtons = document.querySelectorAll('.role-btn');
         const regRoleInput = document.getElementById('regRole');
         const driverFields = document.getElementById('driverFields');
+
+        // Helper: Toggle Password Visibility
+        window.togglePass = function(id, btn) {
+            const input = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        };
 
         // --- UI LOGIC ---
         roleButtons.forEach(btn => {
@@ -247,25 +279,38 @@ Version: 2.0.2 (Debug Mode Enabled)
 
                 if (selectedRole === 'driver') {
                     driverFields.classList.remove('hidden');
+                    // Make license/plate required visually (logic handled in submit)
+                    document.getElementById('regLicense').setAttribute('required', 'true');
+                    document.getElementById('regPlate').setAttribute('required', 'true');
                 } else {
                     driverFields.classList.add('hidden');
+                    document.getElementById('regLicense').removeAttribute('required');
+                    document.getElementById('regPlate').removeAttribute('required');
                 }
             });
         });
 
         function showMessage(msg, type = 'danger') {
-            authMessage.innerHTML = `<div class="alert alert-${type} py-2 px-3 small">${msg}</div>`;
+            const icons = { danger: 'times-circle', success: 'check-circle', info: 'info-circle' };
+            authMessage.innerHTML = `<div class="alert alert-${type} py-2 px-3 small shadow-sm">
+                <i class="fas fa-${icons[type]} me-2"></i>${msg}
+            </div>`;
             setTimeout(() => { authMessage.innerHTML = ''; }, 5000);
         }
 
-        // --- AUTHENTICATION LOGIC WITH DEBUGGING ---
+        // --- AUTHENTICATION LOGIC ---
 
         // 1. LOGIN HANDLER
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Signing in...';
+            
             logDebug("--- STARTING LOGIN ATTEMPT ---");
             
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             try {
@@ -276,75 +321,72 @@ Version: 2.0.2 (Debug Mode Enabled)
                     password
                 });
 
-                if (error) {
-                    logDebug("❌ SIGN IN ERROR", error);
-                    throw error;
-                }
+                if (error) throw error;
 
-                logDebug("✅ SIGN IN SUCCESSFUL", { userId: data.user.id, sessionId: !!data.session });
-                showMessage('Login successful! Checking profile...', 'success');
+                logDebug("✅ SIGN IN SUCCESSFUL", { userId: data.user.id });
+                showMessage('Login successful! Redirecting...', 'success');
                 
                 // STEP 2: FETCH PROFILE
                 logDebug("Fetching profile from 'profiles' table...");
                 
                 const { data: profile, error: profileErr } = await supabase
                     .from('profiles')
-                    .select('*') // Select ALL fields to see what exists
+                    .select('*')
                     .eq('id', data.user.id)
-                    .single(); // Expect exactly one row
+                    .single();
 
                 if (profileErr) {
                     logDebug("❌ PROFILE QUERY ERROR", profileErr);
-                    // Common errors: 
-                    // - PGRST116: no rows returned (ID mismatch or missing record)
-                    // - Permission denied (RLS issue)
-                    throw new Error(`Database Error: ${profileErr.message}. Code: ${profileErr.code}`);
+                    throw new Error(`Database Error: ${profileErr.message}`);
                 }
 
                 if (!profile) {
-                    logDebug("❌ NO PROFILE FOUND (Null result)", { searchedId: data.user.id });
-                    throw new Error("Profile record does not exist in database.");
+                    throw new Error("Profile record does not exist.");
                 }
 
-                logDebug("✅ PROFILE FOUND", { 
-                    id: profile.id, 
-                    role: profile.role, 
-                    status: profile.status 
-                });
+                logDebug("✅ PROFILE FOUND", { role: profile.role, status: profile.status });
 
                 // STEP 3: VALIDATE STATUS & REDIRECT
                 if (profile.status !== 'active') {
-                    logDebug(`⚠️ ACCOUNT NOT ACTIVE. Status: ${profile.status}`);
                     await supabase.auth.signOut();
-                    throw new Error(`Account status is '${profile.status}'. Please contact admin.`);
+                    throw new Error(`Account status is '${profile.status}'. Contact Admin.`);
                 }
 
-                logDebug(`🚀 Redirecting to dashboard for role: ${profile.role}`);
-                
-                if (profile.role === 'admin' || profile.role === 'dispatcher') {
-                    window.location.href = 'admin/dashboard.html';
-                } else if (profile.role === 'driver') {
-                    window.location.href = 'driver/dashboard.html';
-                } else {
-                    window.location.href = 'commuter/dashboard.html';
-                }
+                routeUser(profile.role);
 
             } catch (err) {
                 logDebug(`💥 FINAL ERROR CAUGHT: ${err.message}`);
                 showMessage(err.message || 'Invalid credentials.', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
         });
 
         // 2. REGISTER HANDLER
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btnRegister');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Creating Account...';
+
             logDebug("--- STARTING REGISTRATION ---");
 
-            const fullName = document.getElementById('regFullName').value;
-            const phone = document.getElementById('regPhone').value;
-            const email = document.getElementById('regEmail').value;
+            const fullName = document.getElementById('regFullName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
             const role = regRoleInput.value;
+
+            // Client-side validation
+            if (password !== confirmPassword) {
+                showMessage("Passwords do not match.", "danger");
+                btn.disabled = false;
+                btn.innerText = originalText;
+                return;
+            }
 
             try {
                 logDebug(`Signing up user: ${email} with role: ${role}`);
@@ -361,32 +403,34 @@ Version: 2.0.2 (Debug Mode Enabled)
                     }
                 });
 
-                if (error) {
-                    logDebug("❌ SIGN UP ERROR", error);
-                    throw error;
-                }
+                if (error) throw error;
 
-                logDebug("✅ SIGN UP SUCCESSFUL", { userId: data.user?.id });
+                logDebug("✅ SIGN UP API CALL SUCCESSFUL", { userId: data.user?.id });
                 
-                if (data.user && data.session) {
-                    showMessage('Registration successful! Logging you in...', 'success');
+                if (data.session) {
+                    // Auto-login enabled scenario
+                    showMessage('Registration successful! Verifying profile...', 'success');
                     
-                    // Wait briefly for trigger to fire if enabled
+                    // Wait briefly for DB trigger to fire
                     setTimeout(async () => {
-                       logDebug("Checking if profile was auto-created by trigger...");
-                       const { data: checkProfile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+                       const { data: checkProfile, error: profErr } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
                        
-                       if(checkProfile) {
-                           logDebug("✅ Trigger worked! Profile exists.", checkProfile);
-                           // Proceed to login logic manually or redirect
-                           window.location.reload(); 
-                       } else {
+                       if(profErr || !checkProfile) {
                            logDebug("⚠️ Trigger FAILED or delayed. Profile missing.", { expectedId: data.user.id });
-                           alert("Registered, but profile creation failed. Please contact Admin or try logging in after refreshing.");
+                           showMessage("Registered, but profile creation failed. Refresh page or contact admin.", "warning");
+                       } else {
+                           logDebug("✅ Trigger worked! Profile exists.", checkProfile);
+                           if(checkProfile.status === 'pending_approval') {
+                               showMessage("Account created! Waiting for Admin approval.", "info");
+                               setTimeout(() => window.location.reload(), 2000);
+                           } else {
+                               routeUser(checkProfile.role);
+                           }
                        }
                     }, 2000);
 
                 } else {
+                    // Email confirmation required scenario
                     logDebug("ℹ️ Email confirmation required mode.");
                     showMessage('Check your email to confirm your account.', 'info');
                 }
@@ -394,8 +438,30 @@ Version: 2.0.2 (Debug Mode Enabled)
             } catch (err) {
                 logDebug(`💥 REGISTRATION ERROR: ${err.message}`);
                 showMessage(err.message || 'Registration failed.', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
         });
+
+        // --- ROUTING HELPER ---
+        function routeUser(role) {
+            logDebug(`🚀 Redirecting to dashboard for role: ${role}`);
+            switch(role) {
+                case 'admin':
+                case 'dispatcher':
+                    window.location.href = '/admin/dashboard.html';
+                    break;
+                case 'driver':
+                    window.location.href = '/driver/dashboard.html';
+                    break;
+                case 'commuter':
+                    window.location.href = '/commuter/dashboard.html';
+                    break;
+                default:
+                    window.location.href = '/';
+            }
+        }
     </script>
 </body>
 </html>
