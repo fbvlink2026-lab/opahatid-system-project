@@ -1,0 +1,173 @@
+# =========================================
+# Project: Pahatid System Project
+# File: .github/workflows/fix-paths.yml
+# Description: Auto-fixes hardcoded absolute paths (/) to relative paths in HTML files upon push.
+# Author: AI Assistant
+# Date: 2026-09-29
+# Version: 1.0.0
+# Trigger: Runs on every push to main/master branch.
+# =========================================
+
+name: Fix Hardcoded Paths
+
+on:
+  push:
+    branches: [ main, master ]
+  # Optional: Allow manual trigger from Actions tab
+  workflow_dispatch:
+
+jobs:
+  fix-paths:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for proper diffing if needed later
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install pathlib
+
+      - name: Run Path Fixer Script
+        id: fixer
+        run: |
+          # Create the temporary Python script inline
+          cat << 'EOF' > /tmp/fix_paths.py
+import os
+import re
+from pathlib import Path
+
+def get_relative_path(from_dir, target_rel):
+    """Calculates relative path from source dir to target."""
+    try:
+        abs_from = Path(from_dir).resolve()
+        # Assume root is current working directory where script runs
+        abs_target = Path(target_rel.lstrip('/')).resolve() 
+        rel_path = os.path.relpath(abs_target, start=abs_from)
+        return rel_path.replace("\\", "/")
+    except Exception as e:
+        print(f"Error: {e}")
+        return target_rel
+
+def process_files(root_dir='.'):
+    patterns = [
+        r'(href=")(/[^"]+)(")',
+        r'(src=")(/[^"]+)(")',
+        r"(window\.location\.href\s*=\s*)('|\")(\/[^'\"]+)\2",
+        r"(fetch\(['\"])(\/[^'\"]+)(['\"])"
+    ]
+    
+    fixed_count = 0
+    modified_files = []
+
+    for dirpath, _, filenames in os.walk(root_dir):
+        # Skip hidden dirs and node_modules
+        if '.git' in dirpath or 'node_modules' in dirpath:
+            continue
+            
+        for filename in filenames:
+            if not filename.endswith('.html'):
+                continue
+                
+            filepath = os.path.join(dirpath, filename)
+            
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                original_content = content
+                
+                # Process each pattern
+                for pattern in patterns:
+                    def replacer(match):
+                        nonlocal fixed_count
+                        groups = match.groups()
+                        
+                        # Identify structure based on number of groups
+                        # Pattern 1 & 2: href="/...", src="/..."
+                        if len(groups) == 3:
+                            prefix, path, suffix = groups
+                            if not path.startswith('/'):
+                                return match.group(0)
+                            
+                            # Calculate new relative path
+                            # We need the directory of the current file
+                            file_dir = os.path.dirname(filepath)
+                            new_path = get_relative_path(file_dir, path)
+                            
+                            fixed_count += 1
+                            return f'{prefix}{new_path}{suffix}'
+                        
+                        # Pattern 3: window.location.href = '/...'
+                        elif len(groups) == 4:
+                            prefix, quote_char, path, _ = groups
+                            if not path.startswith('/'):
+                                return match.group(0)
+                            
+                            file_dir = os.path.dirname(filepath)
+                            new_path = get_relative_path(file_dir, path)
+                            
+                            fixed_count += 1
+                            return f'{prefix}{quote_char}{new_path}{quote_char}'
+                            
+                        # Pattern 4: fetch('/...')
+                        elif len(groups) == 3:
+                            prefix, path, suffix = groups
+                            if not path.startswith('/'):
+                                return match.group(0)
+                                
+                            file_dir = os.path.dirname(filepath)
+                            new_path = get_relative_path(file_dir, path)
+                            
+                            fixed_count += 1
+                            return f'{prefix}{new_path}{suffix}'
+                            
+                        return match.group(0)
+
+                    content = re.sub(pattern, replacer, content)
+
+                if content != original_content:
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    modified_files.append(filepath)
+                    print(f"[MODIFIED] {filepath}")
+
+            except Exception as e:
+                print(f"[ERROR] {filepath}: {e}")
+
+    print(f"\n✅ Total Fixes Applied: {fixed_count}")
+    print(f"📁 Files Modified: {len(modified_files)}")
+    
+    # Output for next step
+    with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+        if len(modified_files) > 0:
+            fh.write(f"has_changes=true\n")
+        else:
+            fh.write(f"has_changes=false\n")
+
+EOF
+          
+          # Execute the script
+          python /tmp/fix_paths.py
+
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          git config --global user.name 'Pahatid Bot'
+          git config --global user.email 'bot@pahatidsystem.com'
+          
+          if [[ $(git status --porcelain) ]]; then
+            echo "Changes detected."
+            git add .
+            git commit -m "chore(auto-fix): Corrected hardcoded paths to relative URLs"
+            git push origin HEAD:${{ github.ref }}
+            echo "Pushed fixes."
+          else
+            echo "No changes needed."
+          fi
