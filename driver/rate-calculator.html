@@ -218,13 +218,13 @@ Version: 2.0.0 (Path A - Serverless)
         async function checkAuth() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                window.location.href = '../login.html';
+                window.location.href = '/login.html';
                 return;
             }
             const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
             if (profile.role !== 'driver') {
                 alert("Access Denied.");
-                window.location.href = '../index.html';
+                window.location.href = '/index.html';
             }
         }
 
@@ -368,7 +368,7 @@ Version: 2.0.0 (Path A - Serverless)
                 e.preventDefault();
                 if(confirm("Logout?")) {
                     await supabase.auth.signOut();
-                    window.location.href = '../login.html';
+                    window.location.href = '/login.html';
                 }
             });
         }
@@ -380,7 +380,5 @@ Version: 2.0.0 (Path A - Serverless)
         };
 
     </script>
-
-    <script src="../assets/js/sidebar.js"></script>
 </body>
 </html>
