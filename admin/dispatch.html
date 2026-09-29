@@ -77,7 +77,7 @@ Version: 2.0.0 (Path A - Serverless)
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold" href="/index.html">
+            <a class="navbar-brand fw-bold" href="../index.html">
                 <i class="fas fa-shield-alt me-2 text-warning"></i>Pahatid<span class="text-white">Admin</span>
             </a>
             <div class="ms-auto d-flex gap-2">
@@ -167,14 +167,14 @@ Version: 2.0.0 (Path A - Serverless)
         async function checkAuth() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                window.location.href = '/login.html';
+                window.location.href = '../login.html';
                 return;
             }
             
             const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
             if (profile.role !== 'admin' && profile.role !== 'dispatcher') {
                 alert("Access Denied.");
-                window.location.href = '/index.html';
+                window.location.href = '../index.html';
             }
         }
 
@@ -182,7 +182,7 @@ Version: 2.0.0 (Path A - Serverless)
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 if(confirm("Logout?")) {
                     await supabase.auth.signOut();
-                    window.location.href = '/login.html';
+                    window.location.href = '../login.html';
                 }
             });
         }
