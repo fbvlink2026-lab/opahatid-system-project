@@ -322,11 +322,11 @@ Version: 2.0.2 (Debug Mode Enabled)
                 logDebug(`🚀 Redirecting to dashboard for role: ${profile.role}`);
                 
                 if (profile.role === 'admin' || profile.role === 'dispatcher') {
-                    window.location.href = '/admin/dashboard.html';
+                    window.location.href = 'admin/dashboard.html';
                 } else if (profile.role === 'driver') {
-                    window.location.href = '/driver/dashboard.html';
+                    window.location.href = 'driver/dashboard.html';
                 } else {
-                    window.location.href = '/commuter/dashboard.html';
+                    window.location.href = 'commuter/dashboard.html';
                 }
 
             } catch (err) {

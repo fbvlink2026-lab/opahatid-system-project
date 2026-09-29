@@ -228,7 +228,7 @@ Version: 2.0.0 (Path A - Serverless)
             const { data: { session } } = await supabase.auth.getSession();
             
             if (!session) {
-                window.location.href = '/login.html';
+                window.location.href = '../login.html';
                 return;
             }
             
@@ -383,7 +383,7 @@ Version: 2.0.0 (Path A - Serverless)
                 e.preventDefault();
                 if(confirm("Are you sure you want to logout?")) {
                     await supabase.auth.signOut();
-                    window.location.href = '/login.html';
+                    window.location.href = '../login.html';
                 }
             });
         }

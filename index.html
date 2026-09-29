@@ -247,11 +247,11 @@ import { initDynamicContent } from './assets/js/dynamic-loader.js'; // ADD THIS 
                 
                 if (profile) {
                     if (profile.role === 'admin' || profile.role === 'dispatcher') {
-                        window.location.href = '/admin/dashboard.html';
+                        window.location.href = 'admin/dashboard.html';
                     } else if (profile.role === 'driver') {
-                        window.location.href = '/driver/dashboard.html';
+                        window.location.href = 'driver/dashboard.html';
                     } else if (profile.role === 'commuter') {
-                        window.location.href = '/commuter/dashboard.html';
+                        window.location.href = 'commuter/dashboard.html';
                     }
                 }
             }
