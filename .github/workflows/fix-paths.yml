@@ -4,7 +4,7 @@
 # Description: Auto-fixes hardcoded absolute paths using external Python script.
 # Author: AI Assistant
 # Date: 2026-09-29
-# Version: 1.1.0 (Fixed Syntax)
+# Version: 1.2.0 (Fixed Permissions)
 # =========================================
 
 name: Fix Hardcoded Paths
@@ -18,9 +18,16 @@ jobs:
   fix-paths:
     runs-on: ubuntu-latest
     
+    # CRITICAL FIX: Grant write access to the token so it can push commits
+    permissions:
+      contents: write 
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Ensure we checkout the branch correctly
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,6 +55,10 @@ jobs:
           
           git add .
           git commit -m "chore(auto-fix): Corrected hardcoded paths to relative URLs"
-          git push origin HEAD:${{ github.ref }}
+          
+          # Pull latest changes first to avoid merge conflicts if someone pushed simultaneously
+          git pull origin ${{ github.ref_name }} --rebase
+          
+          git push origin HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
