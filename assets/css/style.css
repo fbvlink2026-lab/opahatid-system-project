@@ -1,301 +1,267 @@
 /* =========================================
 Project: Pahatid System Project
 File: assets/css/style.css
-Description: Global Custom Styles, Theme Variables, and Responsive Layouts
+Description: Global Stylesheet with Left-Aligned Sidebar & Responsive Layouts
 Author: AI Assistant
 Date: 2026-09-29
 Version: 2.0.0 (Path A - Serverless)
 ========================================= */
 
-/* --- 1. CSS VARIABLES (THEME CONFIGURATION) --- */
 :root {
-    /* Primary Brand Colors */
-    --pahatid-primary: #0d6efd;       /* Trust Blue */
-    --pahatid-secondary: #6c757d;     /* Gray */
-    --pahatid-success: #198754;       /* Green for earnings/success */
-    --pahatid-warning: #ffc107;       /* Yellow for alerts/actions */
-    --pahatid-danger: #dc3545;        /* Red for errors/warnings */
-    --pahatid-info: #0dcaf0;          /* Cyan for info */
-    
-    /* Surface Colors */
-    --bg-body: #f8f9fa;               /* Light gray background */
-    --bg-card: #ffffff;               /* White cards */
-    --text-main: #212529;             /* Dark text */
-    --text-muted: #6c757d;            /* Muted text */
-    --border-color: #dee2e6;          /* Subtle borders */
-
-    /* Sidebar Specifics */
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --dark-bg: #212529;
     --sidebar-width: 260px;
-    --sidebar-bg: #1a1d20;            /* Dark sidebar for contrast */
-    --sidebar-text: #adb5bd;
-    --sidebar-active-bg: rgba(255, 255, 255, 0.1);
-    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
-
-    /* Shadows & Radii */
-    --shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
-    --shadow-md: 0 .5rem 1rem rgba(0, 0, 0, .15);
-    --radius-lg: 1rem;
-    --radius-md: .5rem;
+    --header-height: 60px;
+    --transition-speed: 0.3s;
 }
 
-/* --- 2. GLOBAL RESETS & TYPOGRAPHY --- */
+/* --- RESET & BASE STYLES --- */
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--bg-body);
-    color: var(--text-main);
-    overflow-x: hidden;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll due to sidebar */
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    letter-spacing: -0.02em;
+a {
+    text-decoration: none;
 }
 
-.text-gradient {
-    background: linear-gradient(90deg, var(--pahatid-primary), #00bfff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* --- 3. UTILITY CLASSES --- */
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md) !important;
-}
-
-.transition-all {
-    transition: all 0.3s ease-in-out;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, var(--pahatid-primary) 0%, #0a58ca 100%);
-}
-
-.icon-box {
-    width: 50px;
-    height: 50px;
+/* --- TOP NAVBAR (Fixed at Top) --- */
+.top-navbar {
+    height: var(--header-height);
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-}
-
-/* --- 4. SIDEBAR LAYOUT (For Dashboards) --- */
-.app-layout {
-    display: flex;
-    min-height: 100vh;
-}
-
-.sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--sidebar-bg);
-    color: var(--sidebar-text);
+    justify-content: space-between;
+    padding: 0 1rem;
     position: fixed;
     top: 0;
     left: 0;
-    bottom: 0;
+    right: 0;
     z-index: 1000;
-    padding-top: 2rem;
-    transition: transform 0.3s ease;
-    overflow-y: auto;
 }
 
-.sidebar-brand {
-    padding: 0 1.5rem 1.5rem;
-    font-size: 1.25rem;
+.navbar-brand-small {
     font-weight: bold;
-    color: white;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-left: 50px; /* Space for the hamburger menu button */
+}
+
+/* --- SIDEBAR TOGGLE BUTTON (LEFT CORNER) --- */
+#sidebarToggleBtn {
+    position: absolute;
+    left: 15px; /* Fixed to left edge */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: transparent;
+    border: none;
+    color: var(--dark-bg);
+    font-size: 1.2rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    transition: background-color 0.2s;
+    z-index: 1001; /* Above navbar content if needed */
 }
 
-.sidebar-nav {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+#sidebarToggleBtn:hover {
+    background-color: #e9ecef;
 }
 
-.sidebar-link {
-    display: block;
+#sidebarToggleBtn i {
+    pointer-events: none; /* Ensure clicks pass through to button */
+}
+
+/* --- SIDEBAR CONTAINER --- */
+.sidebar {
+    position: fixed;
+    top: var(--header-height); /* Start below navbar */
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    transform: translateX(-100%); /* Hidden by default on mobile/desktop until toggled */
+    transition: transform var(--transition-speed) ease-in-out;
+    z-index: 999;
+    overflow-y: auto;
+    padding-top: 1rem;
+}
+
+/* State: Sidebar Open */
+.sidebar.open {
+    transform: translateX(0);
+}
+
+/* Overlay for Mobile/Desktop focus mode */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-speed);
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- MAIN CONTENT AREA --- */
+.main-content {
+    margin-top: var(--header-height);
+    padding: 1.5rem;
+    min-height: calc(100vh - var(--header-height));
+    transition: margin-left var(--transition-speed);
+}
+
+/* Desktop Behavior: Push Content instead of Overlay */
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0); /* Always visible on large screens */
+        box-shadow: none;
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .main-content {
+        margin-left: var(--sidebar-width); /* Shift content right */
+    }
+
+    #sidebarToggleBtn {
+        display: none; /* Hide toggle on desktop as sidebar is always open */
+    }
+    
+    .sidebar-overlay {
+        display: none; /* No overlay on desktop */
+    }
+}
+
+/* --- SIDEBAR MENU ITEMS --- */
+.menu-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #adb5bd;
+    padding: 1rem 1.5rem 0.5rem;
+    font-weight: 700;
+}
+
+.nav-link-custom {
+    display: flex;
+    align-items: center;
     padding: 0.75rem 1.5rem;
-    color: var(--sidebar-text);
-    text-decoration: none;
-    font-size: 0.95rem;
+    color: #495057;
+    font-weight: 500;
     transition: all 0.2s;
     border-left: 3px solid transparent;
 }
 
-.sidebar-link:hover {
-    background-color: var(--sidebar-hover-bg);
-    color: white;
-}
-
-.sidebar-link.active {
-    background-color: var(--sidebar-active-bg);
-    color: white;
-    border-left-color: var(--pahatid-primary);
-    font-weight: 600;
-}
-
-.sidebar-section-title {
-    padding: 1.5rem 1.5rem 0.5rem;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6c757d;
-    font-weight: bold;
-}
-
-.main-content {
-    margin-left: var(--sidebar-width);
-    flex-grow: 1;
-    padding: 2rem;
-    background-color: var(--bg-body);
-    min-height: 100vh;
-}
-
-/* Mobile Sidebar Behavior */
-@media (max-width: 991.98px) {
-    .sidebar {
-        transform: translateX(-100%);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .sidebar.show {
-        transform: translateX(0);
-    }
-
-    .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-    
-    /* Overlay for mobile menu */
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
-    }
-    
-    .sidebar-overlay.show {
-        display: block;
-    }
-}
-
-/* --- 5. COMPONENT STYLES --- */
-
-/* Cards */
-.card-custom {
-    border: none;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    background: var(--bg-card);
-}
-
-.card-header-custom {
-    background: transparent;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1.25rem 1.5rem;
-    font-weight: 600;
-}
-
-/* Buttons */
-.btn-rounded {
-    border-radius: 50rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-}
-
-/* Forms */
-.form-control:focus {
-    border-color: var(--pahatid-primary);
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Tables */
-.table-responsive {
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-
-.table thead th {
-    background-color: #f1f3f5;
-    border-bottom: 2px solid var(--border-color);
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-.table tbody tr:hover {
+.nav-link-custom:hover {
     background-color: #f8f9fa;
+    color: var(--primary-color);
 }
 
-/* Badges */
-.badge-rank-newbie { background-color: #e9ecef; color: #495057; }
-.badge-rank-regular { background-color: #cff4fc; color: #055160; }
-.badge-rank-senior { background-color: #d1e7dd; color: #0f5132; }
-.badge-rank-expert { background-color: #fff3cd; color: #664d03; }
-.badge-rank-master { background-color: #ffe5d0; color: #664d03; font-weight: bold; }
-
-/* Status Indicators */
-.status-dot {
-    height: 10px;
-    width: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 5px;
+.nav-link-custom.active {
+    background-color: #eef2ff;
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    font-weight: 600;
 }
-.status-online { background-color: var(--pahatid-success); box-shadow: 0 0 5px var(--pahatid-success); }
-.status-offline { background-color: var(--pahatid-secondary); }
-.status-busy { background-color: var(--pahatid-warning); }
 
-/* --- 6. MAP CONTAINER (Leaflet) --- */
-#map-container {
-    height: 400px;
+.nav-link-custom i {
+    width: 24px;
+    margin-right: 10px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* --- UTILITY CLASSES --- */
+.card-dashboard {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-bg);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-icon-only {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* --- LOADING SPINNER OVERLAY --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    z-index: 1; /* Ensure map doesn't overlap navbar/sidebar too much */
+    height: 100%;
+    background: rgba(255,255,255,0.8);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 
-.leaflet-popup-content-wrapper {
-    border-radius: 8px;
-}
-
-/* --- 7. LOADING SPINNER CUSTOMIZATION --- */
-.spinner-border {
+.spinner-border-lg {
     width: 3rem;
     height: 3rem;
 }
 
-/* --- 8. PRINT STYLES (For Receipts/Reports) --- */
-@media print {
-    .sidebar, .navbar, .btn, .no-print {
-        display: none !important;
-    }
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-    body {
-        background: white;
-        color: black;
+/* --- MAP CONTAINERS (Leaflet) --- */
+.map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: 300px;
     }
 }
