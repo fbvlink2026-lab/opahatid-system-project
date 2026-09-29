@@ -175,3 +175,36 @@ export async function requireAuth(allowedRoles = []) {
 
     return true;
 }
+// =========================================
+// ADD THIS TO THE BOTTOM OF config.js
+// =========================================
+
+/**
+ * Performs a secure and complete logout.
+ * Clears Supabase session AND forces redirect to Home/Login.
+ */
+export async function performLogout() {
+    if (!confirm("Are you sure you want to logout?")) return;
+
+    try {
+        // 1. Sign out from Supabase Auth
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+            console.error("Sign out error:", error);
+            // Even if there's an error, we proceed to clear UI state
+        }
+
+        // 2. Clear any local storage items manually if needed (extra safety)
+        localStorage.removeItem('pahatid_session'); 
+        
+        // 3. Redirect to Main Landing Page (Not Login, so they can choose role again)
+        // Using relative path for compatibility with GitHub Pages subfolders
+        window.location.href = './index.html'; 
+
+    } catch (e) {
+        console.error("Critical logout failure", e);
+        // Fallback redirect
+        window.location.href = './index.html';
+    }
+}
